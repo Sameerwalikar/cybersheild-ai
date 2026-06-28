@@ -1,4 +1,11 @@
-import { Hero, HeroScrollTransition, NetworkStory } from "@/components/landing";
+import {
+  Hero,
+  HeroScrollTransition,
+  NetworkStory,
+  PipelineSection,
+  ThreatsSection,
+  AegisSection,
+} from "@/components/landing";
 
 export default function HomePage() {
   return (
@@ -7,6 +14,9 @@ export default function HomePage() {
         <Hero />
       </HeroScrollTransition>
       <NetworkStory />
+      <PipelineSection />
+      <ThreatsSection />
+      <AegisSection />
     </main>
   );
 }
