@@ -1,9 +1,12 @@
-import { Hero } from "@/components/landing";
+import { Hero, HeroScrollTransition, NetworkStory } from "@/components/landing";
 
 export default function HomePage() {
   return (
     <main>
-      <Hero />
+      <HeroScrollTransition>
+        <Hero />
+      </HeroScrollTransition>
+      <NetworkStory />
     </main>
   );
 }

@@ -1,1 +1,2 @@
-export { Hero } from "./hero";
+export { Hero, HeroScrollTransition } from "./hero";
+export { NetworkStory } from "./story";
