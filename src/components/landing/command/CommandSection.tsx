@@ -3,7 +3,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { motion } from "framer-motion";
 import { IndiaMap } from "./IndiaMap";
 import { ThreatFeed } from "./ThreatFeed";
 import { InvestigationPanel } from "./InvestigationPanel";
@@ -13,23 +12,28 @@ import { AegisAssistant } from "./AegisAssistant";
 gsap.registerPlugin(ScrollTrigger);
 
 // Deterministic seeded random for SSR-safe particle positions
+// Uses integer arithmetic to avoid floating-point precision differences between server/client
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 233280;
   return x - Math.floor(x);
 }
 
+function roundTo4(n: number): number {
+  return Math.round(n * 10000) / 10000;
+}
+
 interface ParticleData {
-  left: number;
-  top: number;
+  left: string;
+  top: string;
   duration: number;
   delay: number;
 }
 
 const PARTICLES: ParticleData[] = Array.from({ length: 20 }, (_, i) => ({
-  left: 10 + seededRandom(i * 3 + 1) * 80,
-  top: 10 + seededRandom(i * 3 + 2) * 80,
-  duration: 3 + seededRandom(i * 3 + 3) * 2,
-  delay: seededRandom(i * 3 + 4) * 3,
+  left: `${roundTo4(10 + seededRandom(i * 3 + 1) * 80)}%`,
+  top: `${roundTo4(10 + seededRandom(i * 3 + 2) * 80)}%`,
+  duration: roundTo4(3 + seededRandom(i * 3 + 3) * 2),
+  delay: roundTo4(seededRandom(i * 3 + 4) * 3),
 }));
 
 export function CommandSection() {
@@ -81,7 +85,11 @@ export function CommandSection() {
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] rounded-full opacity-[0.03]" style={{ background: "radial-gradient(circle, #EC9AA3 0%, transparent 55%)" }} />
         {PARTICLES.map((p, i) => (
-          <motion.div key={i} className="absolute w-1 h-1 rounded-full bg-[#EC9AA3]/20" style={{ left: `${p.left}%`, top: `${p.top}%` }} animate={{ y: [0, -10, 0], opacity: [0.1, 0.3, 0.1] }} transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }} />
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-[#EC9AA3]/20 animate-[float_4s_ease-in-out_infinite]"
+            style={{ left: p.left, top: p.top, animationDelay: `${p.delay}s`, animationDuration: `${p.duration}s` }}
+          />
         ))}
       </div>
 
@@ -117,7 +125,7 @@ export function CommandSection() {
               <IndiaMap active={isActive} activeCity={activeCity} onCityClick={handleCityClick} />
             </div>
             <div className="order-3">
-              <InvestigationPanel active={isActive} />
+              <InvestigationPanel active={isActive} activeCity={activeCity} />
             </div>
           </div>
 

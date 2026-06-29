@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, memo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Group } from "three";
 import { NetworkNodes } from "./NetworkNodes";
@@ -17,7 +17,7 @@ interface IntelligenceGlobeProps {
   mouseY: number;
 }
 
-const NODE_COUNT = 400;
+const NODE_COUNT = 250;
 const SPHERE_RADIUS = 2.6;
 const CONNECTION_DISTANCE = 0.9;
 
@@ -37,7 +37,7 @@ function generateFibonacciSphere(count: number, radius: number): Float32Array {
   return positions;
 }
 
-export function IntelligenceGlobe({ reducedMotion, mouseX, mouseY }: IntelligenceGlobeProps) {
+export const IntelligenceGlobe = memo(function IntelligenceGlobe({ reducedMotion, mouseX, mouseY }: IntelligenceGlobeProps) {
   const groupRef = useRef<Group>(null);
   const currentParallaxZ = useRef(0);
 
@@ -51,12 +51,10 @@ export function IntelligenceGlobe({ reducedMotion, mouseX, mouseY }: Intelligenc
 
     const time = clock.getElapsedTime();
 
-    // Organic rotation with multi-frequency variation
     const baseSpeed = reducedMotion ? 0.02 : 0.07;
     const variation = Math.sin(time * 0.23) * 0.015 + Math.sin(time * 0.11) * 0.008;
     groupRef.current.rotation.y += delta * (baseSpeed + variation);
 
-    // Mouse parallax (max ~5 degrees = 0.087 rad)
     const maxAngle = 0.087;
     const dampFactor = 0.02;
 
@@ -85,27 +83,20 @@ export function IntelligenceGlobe({ reducedMotion, mouseX, mouseY }: Intelligenc
         mouseY={mouseY}
         reducedMotion={reducedMotion}
       />
-      <PulseAnimation
-        positions={nodePositions}
-        count={NODE_COUNT}
-        maxDistance={CONNECTION_DISTANCE}
-        reducedMotion={reducedMotion}
-      />
-      <ScanWave
-        radius={SPHERE_RADIUS}
-        reducedMotion={reducedMotion}
-      />
-      <ThreatNodes
-        positions={nodePositions}
-        count={NODE_COUNT}
-        maxActive={3}
-        reducedMotion={reducedMotion}
-      />
-      <IntelligencePulse
-        radius={SPHERE_RADIUS}
-        reducedMotion={reducedMotion}
-      />
-      <AmbientParticles reducedMotion={reducedMotion} />
+      {!reducedMotion && (
+        <>
+          <PulseAnimation
+            positions={nodePositions}
+            count={NODE_COUNT}
+            maxDistance={CONNECTION_DISTANCE}
+            reducedMotion={reducedMotion}
+          />
+          <ScanWave radius={SPHERE_RADIUS} reducedMotion={reducedMotion} />
+          <ThreatNodes positions={nodePositions} count={NODE_COUNT} maxActive={2} reducedMotion={reducedMotion} />
+          <IntelligencePulse radius={SPHERE_RADIUS} reducedMotion={reducedMotion} />
+        </>
+      )}
+      <AmbientParticles count={120} reducedMotion={reducedMotion} />
     </group>
   );
-}
+});

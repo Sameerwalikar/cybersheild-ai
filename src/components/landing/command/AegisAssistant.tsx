@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const messages = [
-  "Three related fraud networks detected.",
+  "New fraud cluster detected.",
+  "Cross-state connection established.",
   "High priority cluster discovered in Mumbai.",
-  "Investigation confidence 96%.",
-  "New phishing domain linked to existing case.",
+  "Investigation confidence increased.",
   "UPI transaction pattern matches known fraud.",
+  "New phishing domain linked to existing case.",
+  "Three related fraud networks identified.",
 ];
 
 interface AegisAssistantProps {
@@ -17,24 +19,33 @@ interface AegisAssistantProps {
 
 export function AegisAssistant({ active }: AegisAssistantProps) {
   const [currentMessage, setCurrentMessage] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    if (!active) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+  }, []);
+
+  useEffect(() => {
+    if (!active || reducedMotion) return;
     const interval = setInterval(() => {
       setCurrentMessage((prev) => (prev + 1) % messages.length);
-    }, 4000);
+    }, 4500);
     return () => clearInterval(interval);
-  }, [active]);
+  }, [active, reducedMotion]);
 
   return (
     <motion.div
-      className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#12121A]/80 border border-[rgba(236,154,163,0.15)] backdrop-blur-sm"
+      className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#12121A]/80 border border-[rgba(236,154,163,0.12)] backdrop-blur-sm"
       initial={{ opacity: 0, y: 12 }}
       animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-      transition={{ duration: 0.5, delay: 0.8 }}
+      transition={{ duration: 0.5, delay: 0.6 }}
+      role="status"
+      aria-live="polite"
+      aria-label="AEGIS intelligence assistant updates"
     >
       {/* AEGIS avatar */}
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#EC9AA3] to-[#F3B3BA] flex items-center justify-center flex-shrink-0 shadow-md shadow-[rgba(236,154,163,0.15)]">
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#EC9AA3] to-[#F3B3BA] flex items-center justify-center flex-shrink-0 shadow-md shadow-[rgba(236,154,163,0.12)]">
         <span className="text-[10px] font-bold text-[#050508]">A</span>
       </div>
 

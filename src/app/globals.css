@@ -53,3 +53,8 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); opacity: 0.1; }
+  50% { transform: translateY(-10px); opacity: 0.3; }
+}

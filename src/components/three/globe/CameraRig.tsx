@@ -17,22 +17,22 @@ export function CameraRig({ reducedMotion }: CameraRigProps) {
 
     const time = clock.getElapsedTime();
 
-    // Multi-frequency breathing for organic feel
+    // Slower, more subtle breathing — premium feel
     const breathX =
-      Math.sin(time * 0.13) * 0.06 +
-      Math.sin(time * 0.07) * 0.03;
+      Math.sin(time * 0.1) * 0.04 +
+      Math.sin(time * 0.05) * 0.02;
     const breathY =
-      Math.cos(time * 0.11) * 0.04 +
-      Math.cos(time * 0.05) * 0.02;
+      Math.cos(time * 0.08) * 0.03 +
+      Math.cos(time * 0.04) * 0.015;
     const breathZ =
       7 +
-      Math.sin(time * 0.06) * 0.12 +
-      Math.sin(time * 0.03) * 0.06;
+      Math.sin(time * 0.05) * 0.08 +
+      Math.sin(time * 0.025) * 0.04;
 
     targetRef.current.set(breathX, breathY, breathZ);
 
-    // Very smooth interpolation — never snaps
-    camera.position.lerp(targetRef.current, 0.015);
+    // Smoother interpolation — even more gradual
+    camera.position.lerp(targetRef.current, 0.008);
     camera.lookAt(0, 0, 0);
   });
 

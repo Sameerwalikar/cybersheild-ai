@@ -211,8 +211,8 @@ export function FraudGraph() {
     >
       <Canvas
         camera={{ position: [0, 0, 5], fov: 45 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
         style={{ width: "100%", height: "100%" }}
       >
         <ambientLight intensity={0.3} />

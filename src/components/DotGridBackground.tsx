@@ -1,6 +1,8 @@
 "use client";
 
-export function DotGridBackground() {
+import { memo } from "react";
+
+export const DotGridBackground = memo(function DotGridBackground() {
   return (
     <div
       className="fixed inset-0 pointer-events-none z-0"
@@ -14,7 +16,6 @@ export function DotGridBackground() {
           backgroundSize: "28px 28px",
         }}
       />
-      {/* Subtle vignette */}
       <div
         className="absolute inset-0"
         style={{
@@ -24,4 +25,4 @@ export function DotGridBackground() {
       />
     </div>
   );
-}
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, memo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { InstancedMesh, Object3D, Color, MeshBasicMaterial, Vector3 } from "three";
 
@@ -18,19 +18,19 @@ const baseColor = new Color("#EC9AA3");
 const brightColor = new Color("#F3B3BA");
 const hoverColor = new Color("#F8F8FA");
 
-export function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }: NetworkNodesProps) {
+export const NetworkNodes = memo(function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }: NetworkNodesProps) {
   const meshRef = useRef<InstancedMesh>(null);
 
   const pulsePhases = useMemo(
-    () => Array.from({ length: count }, () => Math.random() * Math.PI * 2),
+    () => Float32Array.from({ length: count }, (_, i) => ((i * 2654435761) % 1000) / 1000 * Math.PI * 2),
     [count]
   );
   const intensities = useMemo(
-    () => Array.from({ length: count }, () => 0.3 + Math.random() * 0.7),
+    () => Float32Array.from({ length: count }, (_, i) => 0.3 + ((i * 1597334677) % 1000) / 1000 * 0.7),
     [count]
   );
   const sizes = useMemo(
-    () => Array.from({ length: count }, () => 0.014 + Math.random() * 0.014),
+    () => Float32Array.from({ length: count }, (_, i) => 0.014 + ((i * 789456123) % 1000) / 1000 * 0.014),
     [count]
   );
 
@@ -89,22 +89,13 @@ export function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }
   });
 
   const material = useMemo(
-    () =>
-      new MeshBasicMaterial({
-        color: baseColor,
-        transparent: true,
-        opacity: 0.9,
-      }),
+    () => new MeshBasicMaterial({ color: baseColor, transparent: true, opacity: 0.9 }),
     []
   );
 
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[undefined, material, count]}
-      frustumCulled={false}
-    >
-      <sphereGeometry args={[1, 8, 8]} />
+    <instancedMesh ref={meshRef} args={[undefined, material, count]} frustumCulled={false}>
+      <sphereGeometry args={[1, 6, 6]} />
     </instancedMesh>
   );
-}
+});

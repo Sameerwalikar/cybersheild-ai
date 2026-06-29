@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
@@ -9,21 +10,34 @@ import {
   NetworkStory,
   PipelineSection,
   ThreatsSection,
-  AegisSection,
-  DetectionSection,
-  JourneySection,
-  CommandSection,
 } from "@/components/landing";
 import { DotGridBackground } from "@/components/DotGridBackground";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Lazy load heavy below-fold sections
+const AegisSection = dynamic(
+  () => import("@/components/landing/aegis").then((m) => m.AegisSection),
+  { ssr: true }
+);
+const DetectionSection = dynamic(
+  () => import("@/components/landing/detection").then((m) => m.DetectionSection),
+  { ssr: true }
+);
+const JourneySection = dynamic(
+  () => import("@/components/landing/journey").then((m) => m.JourneySection),
+  { ssr: true }
+);
+const CommandSection = dynamic(
+  () => import("@/components/landing/command").then((m) => m.CommandSection),
+  { ssr: true }
+);
+
 export default function HomePage() {
   useEffect(() => {
-    // Refresh all ScrollTriggers after full layout paint
     const timeout = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 100);
+    }, 150);
 
     return () => {
       clearTimeout(timeout);
