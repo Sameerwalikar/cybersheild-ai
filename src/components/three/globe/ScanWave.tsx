@@ -36,7 +36,7 @@ export function ScanWave({ radius, reducedMotion }: ScanWaveProps) {
     <mesh ref={meshRef} rotation={[Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.95, 1, 64]} />
       <meshBasicMaterial
-        color="#4F46E5"
+        color="#EC9AA3"
         transparent
         opacity={0.15}
         depthWrite={false}

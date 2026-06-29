@@ -59,8 +59,8 @@ export function PipelineCards({ onHover }: PipelineCardsProps) {
         <motion.div
           key={card.title}
           className="group relative p-4 rounded-xl
-                     bg-white/60 backdrop-blur-sm
-                     border border-slate-100
+                     bg-[#12121A]/60 backdrop-blur-sm
+                     border border-[rgba(236,154,163,0.12)]
                      cursor-default
                      transition-all duration-200"
           variants={cardVariants}
@@ -70,8 +70,8 @@ export function PipelineCards({ onHover }: PipelineCardsProps) {
           custom={i}
           whileHover={{
             y: -3,
-            boxShadow: "0 8px 25px rgba(79,70,229,0.08)",
-            borderColor: "rgba(79,70,229,0.2)",
+            boxShadow: "0 8px 25px rgba(236,154,163,0.08)",
+            borderColor: "rgba(236,154,163,0.3)",
           }}
           onHoverStart={() => onHover(card.stageIndex)}
           onHoverEnd={() => onHover(null)}
@@ -82,14 +82,14 @@ export function PipelineCards({ onHover }: PipelineCardsProps) {
           onBlur={() => onHover(null)}
         >
           {/* Glow effect on hover */}
-          <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-indigo-50/50 to-transparent" />
+          <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-[rgba(236,154,163,0.05)] to-transparent" />
 
           <div className="relative">
             <div className="flex items-center gap-2 mb-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:shadow-[0_0_6px_rgba(79,70,229,0.5)] transition-shadow duration-300" />
-              <h4 className="text-sm font-semibold text-slate-900">{card.title}</h4>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#EC9AA3] group-hover:shadow-[0_0_6px_rgba(236,154,163,0.5)] transition-shadow duration-300" />
+              <h4 className="text-sm font-semibold text-[#F8F8FA]">{card.title}</h4>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed pl-3.5">
+            <p className="text-xs text-[#B6B8C4] leading-relaxed pl-3.5">
               {card.description}
             </p>
           </div>

@@ -9,7 +9,7 @@ const HeroGlobe = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full h-full flex items-center justify-center">
-        <div className="w-48 h-48 rounded-full bg-indigo-50/40 animate-pulse" />
+        <div className="w-48 h-48 rounded-full bg-[#EC9AA3]/5 animate-pulse" />
       </div>
     ),
   }

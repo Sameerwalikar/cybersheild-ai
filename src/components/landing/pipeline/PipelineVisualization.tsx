@@ -58,16 +58,16 @@ export function PipelineVisualization({ activeStage, reducedMotion }: PipelineVi
                   relative w-12 h-12 rounded-full flex items-center justify-center
                   transition-all duration-500 ease-out
                   ${isActive
-                    ? "bg-indigo-600 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
-                    : "bg-slate-100 border border-slate-200"
+                    ? "bg-[#EC9AA3] shadow-[0_0_20px_rgba(236,154,163,0.3)]"
+                    : "bg-[#12121A] border border-[rgba(236,154,163,0.18)]"
                   }
                   ${isCurrent && !reducedMotion ? "scale-110" : ""}
-                  ${isHighlighted ? "ring-4 ring-indigo-300/50 scale-115" : ""}
+                  ${isHighlighted ? "ring-4 ring-[rgba(236,154,163,0.3)] scale-115" : ""}
                 `}
               >
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-300
-                    ${isActive ? "bg-white" : "bg-slate-300"}
+                    ${isActive ? "bg-[#050508]" : "bg-[#B6B8C4]/30"}
                     ${isCurrent && !reducedMotion ? "animate-pulse" : ""}
                   `}
                 />
@@ -77,8 +77,8 @@ export function PipelineVisualization({ activeStage, reducedMotion }: PipelineVi
                   className={`
                     absolute left-full ml-4 whitespace-nowrap text-sm font-medium
                     transition-all duration-300
-                    ${isActive ? "text-slate-900 opacity-100" : "text-slate-400 opacity-60"}
-                    ${isHighlighted ? "text-indigo-700 font-semibold" : ""}
+                    ${isActive ? "text-[#F8F8FA] opacity-100" : "text-[#B6B8C4]/50 opacity-60"}
+                    ${isHighlighted ? "text-[#EC9AA3] font-semibold" : ""}
                   `}
                 >
                   {stage.label}
@@ -91,12 +91,11 @@ export function PipelineVisualization({ activeStage, reducedMotion }: PipelineVi
                   <div
                     className={`
                       w-px h-full transition-all duration-500
-                      ${i < displayStage ? "bg-indigo-400" : "bg-slate-200"}
+                      ${i < displayStage ? "bg-[#EC9AA3]/60" : "bg-[rgba(236,154,163,0.12)]"}
                     `}
                   />
-                  {/* Pulse traveling down */}
                   {i === displayStage - 1 && !reducedMotion && (
-                    <div className="absolute w-2 h-2 rounded-full bg-indigo-400 animate-ping opacity-60" />
+                    <div className="absolute w-2 h-2 rounded-full bg-[#EC9AA3] animate-ping opacity-60" />
                   )}
                 </div>
               )}

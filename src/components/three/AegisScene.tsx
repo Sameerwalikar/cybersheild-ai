@@ -56,22 +56,23 @@ export function AegisScene({ onHoverChange }: AegisSceneProps) {
         style={{ width: "100%", height: "100%" }}
         resize={{ scroll: false, debounce: { scroll: 50, resize: 50 } }}
       >
-        {/* Studio Lighting */}
-        <ambientLight intensity={0.45} />
-        <hemisphereLight color="#ffffff" groundColor="#E0E7FF" intensity={0.4} />
+        {/* Studio Lighting for dark theme */}
+        <ambientLight intensity={0.3} />
+        <hemisphereLight color="#1a1a2e" groundColor="#0D0D12" intensity={0.3} />
         {/* Key light */}
         <directionalLight
           position={[4, 8, 5]}
-          intensity={0.9}
+          intensity={0.7}
+          color="#EC9AA3"
           castShadow
           shadow-mapSize={1024}
           shadow-bias={-0.0001}
         />
         {/* Fill light */}
-        <directionalLight position={[-4, 3, -3]} intensity={0.25} color="#E0E7FF" />
+        <directionalLight position={[-4, 3, -3]} intensity={0.2} color="#B6B8C4" />
         {/* Rim lights */}
-        <pointLight position={[-3, 2, -4]} intensity={0.4} color="#818CF8" distance={12} decay={2} />
-        <pointLight position={[3, 1, -3]} intensity={0.3} color="#A5B4FC" distance={10} decay={2} />
+        <pointLight position={[-3, 2, -4]} intensity={0.4} color="#EC9AA3" distance={12} decay={2} />
+        <pointLight position={[3, 1, -3]} intensity={0.3} color="#F3B3BA" distance={10} decay={2} />
 
         {/* Orbit Controls */}
         <OrbitControls
@@ -82,9 +83,7 @@ export function AegisScene({ onHoverChange }: AegisSceneProps) {
           dampingFactor={0.06}
           autoRotate={true}
           autoRotateSpeed={reducedMotion ? 0.2 : 0.6}
-          // Target slightly above platform for better framing
           target={[0, 1.2, 0]}
-          // Restrict vertical: ~20° from equator (polar angle center is PI/2)
           minPolarAngle={Math.PI * 0.3}
           maxPolarAngle={Math.PI * 0.65}
           minDistance={3.5}
@@ -94,16 +93,15 @@ export function AegisScene({ onHoverChange }: AegisSceneProps) {
 
         <Suspense fallback={null}>
           <AegisModel reducedMotion={reducedMotion} hovered={hovered} />
-          <Environment preset="city" environmentIntensity={0.3} />
+          <Environment preset="night" environmentIntensity={0.2} />
         </Suspense>
 
-        {/* Platform aligned at y=0 where model feet rest */}
+        {/* Platform */}
         <Platform hovered={hovered} />
 
-        {/* Contact shadows at platform level */}
         <ContactShadows
           position={[0, 0.01, 0]}
-          opacity={0.35}
+          opacity={0.25}
           scale={7}
           blur={2}
           far={4}
@@ -119,14 +117,14 @@ function Platform({ hovered }: { hovered: boolean }) {
       {/* Base disc */}
       <mesh>
         <circleGeometry args={[2.0, 64]} />
-        <meshBasicMaterial color="#F1F5F9" transparent opacity={0.5} />
+        <meshBasicMaterial color="#0D0D12" transparent opacity={0.5} />
       </mesh>
 
       {/* Outer glow ring */}
       <mesh position={[0, 0, 0.005]}>
         <ringGeometry args={[1.85, 2.0, 64]} />
         <meshBasicMaterial
-          color="#4F46E5"
+          color="#EC9AA3"
           transparent
           opacity={hovered ? 0.2 : 0.08}
         />
@@ -136,7 +134,7 @@ function Platform({ hovered }: { hovered: boolean }) {
       <mesh position={[0, 0, 0.003]}>
         <ringGeometry args={[1.5, 1.55, 64]} />
         <meshBasicMaterial
-          color="#4F46E5"
+          color="#EC9AA3"
           transparent
           opacity={hovered ? 0.1 : 0.04}
         />
@@ -145,7 +143,7 @@ function Platform({ hovered }: { hovered: boolean }) {
       {/* Soft radial glow */}
       <mesh position={[0, 0, -0.01]}>
         <circleGeometry args={[3, 64]} />
-        <meshBasicMaterial color="#4F46E5" transparent opacity={0.015} />
+        <meshBasicMaterial color="#EC9AA3" transparent opacity={0.015} />
       </mesh>
     </group>
   );

@@ -17,13 +17,11 @@ export function IntelligencePulse({ radius, reducedMotion }: IntelligencePulsePr
     if (!meshRef.current || !matRef.current || reducedMotion) return;
 
     const time = clock.getElapsedTime();
-    // Pulse every ~8 seconds, expanding outward
-    const cycle = (time * 0.125) % 1; // 8s period
+    const cycle = (time * 0.125) % 1;
     const scale = radius * 0.3 + cycle * radius * 0.85;
 
     meshRef.current.scale.setScalar(scale);
 
-    // Fade in quickly, hold, then fade out
     let opacity = 0;
     if (cycle < 0.1) {
       opacity = cycle / 0.1;
@@ -43,7 +41,7 @@ export function IntelligencePulse({ radius, reducedMotion }: IntelligencePulsePr
       <sphereGeometry args={[1, 32, 32]} />
       <meshBasicMaterial
         ref={matRef}
-        color="#4F46E5"
+        color="#EC9AA3"
         transparent
         opacity={0}
         depthWrite={false}

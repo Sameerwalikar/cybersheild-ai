@@ -14,9 +14,9 @@ interface NetworkNodesProps {
 
 const tempObject = new Object3D();
 const tempColor = new Color();
-const baseColor = new Color("#4F46E5");
-const brightColor = new Color("#A5B4FC");
-const hoverColor = new Color("#C7D2FE");
+const baseColor = new Color("#EC9AA3");
+const brightColor = new Color("#F3B3BA");
+const hoverColor = new Color("#F8F8FA");
 
 export function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }: NetworkNodesProps) {
   const meshRef = useRef<InstancedMesh>(null);
@@ -34,7 +34,6 @@ export function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }
     [count]
   );
 
-  // Precompute world positions for depth and hover
   const worldPositions = useMemo(() => {
     const wp: Vector3[] = [];
     for (let i = 0; i < count; i++) {
@@ -43,25 +42,21 @@ export function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }
     return wp;
   }, [positions, count]);
 
-  // Convert mouse to a rough 3D direction for hover proximity
   const mouseDir = useMemo(() => new Vector3(), []);
 
   useFrame(({ clock, camera }) => {
     if (!meshRef.current) return;
     const time = clock.getElapsedTime();
 
-    // Compute approximate hover point on globe surface
     mouseDir.set(mouseX * 2.6, -mouseY * 2.6, 2.6).normalize().multiplyScalar(2.6);
 
     for (let i = 0; i < count; i++) {
       const wp = worldPositions[i];
       tempObject.position.copy(wp);
 
-      // Depth-based opacity: nodes closer to camera brighter
       const distToCamera = wp.distanceTo(camera.position);
       const depthFactor = 1 - Math.min(Math.max((distToCamera - 4.5) / 5, 0), 0.6);
 
-      // Pulse with random phase and intensity variation
       const pulse = reducedMotion
         ? 1
         : 1 + Math.sin(time * (0.8 + intensities[i] * 0.6) + pulsePhases[i]) * 0.12 * intensities[i];
@@ -71,11 +66,9 @@ export function NetworkNodes({ positions, count, reducedMotion, mouseX, mouseY }
       tempObject.updateMatrix();
       meshRef.current.setMatrixAt(i, tempObject.matrix);
 
-      // Hover proximity brightening
       const hoverDist = wp.distanceTo(mouseDir);
       const hoverInfluence = Math.max(0, 1 - hoverDist / 1.2);
 
-      // Color: base with depth and hover influence
       const blend = reducedMotion
         ? 0
         : (Math.sin(time * 0.6 + pulsePhases[i]) + 1) * 0.5 * intensities[i] * 0.3;

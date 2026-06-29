@@ -40,12 +40,12 @@ export function ThreatCard({
     <motion.div
       className={`
         relative p-5 rounded-2xl cursor-default
-        bg-white/70 backdrop-blur-sm
-        shadow-[0_4px_20px_rgba(0,0,0,0.03)]
+        bg-[#12121A]/70 backdrop-blur-sm
+        shadow-[0_4px_20px_rgba(0,0,0,0.2)]
         transition-colors duration-700 ease-out
         ${isProtected
-          ? "border-2 border-indigo-300/60"
-          : "border-2 border-rose-200/60"
+          ? "border-2 border-[rgba(236,154,163,0.3)]"
+          : "border-2 border-red-400/30"
         }
       `}
       initial={{ opacity: 0, x: direction.x, y: direction.y }}
@@ -67,16 +67,16 @@ export function ThreatCard({
     >
       {/* Status indicator */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-slate-900">{title}</span>
+        <span className="text-sm font-semibold text-[#F8F8FA]">{title}</span>
         <div className="flex items-center gap-1.5">
           <div
             className={`w-2 h-2 rounded-full transition-colors duration-700 ${
-              isProtected ? "bg-indigo-500" : "bg-rose-500 animate-pulse"
+              isProtected ? "bg-[#EC9AA3]" : "bg-red-400 animate-pulse"
             }`}
           />
           <span
             className={`text-xs font-medium transition-colors duration-700 ${
-              isProtected ? "text-indigo-600" : "text-rose-600"
+              isProtected ? "text-[#EC9AA3]" : "text-red-400"
             }`}
           >
             {isProtected ? "Protected" : "Threat"}
@@ -85,7 +85,7 @@ export function ThreatCard({
       </div>
 
       {/* Preview text */}
-      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+      <p className="text-xs text-[#B6B8C4] leading-relaxed line-clamp-2">
         {example}
       </p>
 
@@ -99,18 +99,18 @@ export function ThreatCard({
         transition={{ duration: 0.25, ease: "easeOut" }}
         className="overflow-hidden"
       >
-        <div className="pt-3 mt-3 border-t border-slate-100 space-y-2">
+        <div className="pt-3 mt-3 border-t border-[rgba(236,154,163,0.12)] space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">Risk Level</span>
-            <span className="font-medium text-slate-700">{riskLevel}</span>
+            <span className="text-[#B6B8C4]">Risk Level</span>
+            <span className="font-medium text-[#F8F8FA]">{riskLevel}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">AI Confidence</span>
-            <span className="font-medium text-slate-700">{confidence}%</span>
+            <span className="text-[#B6B8C4]">AI Confidence</span>
+            <span className="font-medium text-[#F8F8FA]">{confidence}%</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">Action</span>
-            <span className="font-medium text-indigo-600">{recommendation}</span>
+            <span className="text-[#B6B8C4]">Action</span>
+            <span className="font-medium text-[#EC9AA3]">{recommendation}</span>
           </div>
         </div>
       </motion.div>
@@ -118,13 +118,13 @@ export function ThreatCard({
       {/* Protected checkmark */}
       {isProtected && (
         <motion.div
-          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center shadow-md"
+          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#EC9AA3] flex items-center justify-center shadow-md"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 500, damping: 25, delay: 0.3 }}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <path d="M2 6.5L4.5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 6.5L4.5 9L10 3" stroke="#050508" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </motion.div>
       )}

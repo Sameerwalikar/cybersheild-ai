@@ -50,9 +50,8 @@ const EDGES: GraphEdge[] = [
   { from: 2, to: 3 },
 ];
 
-const nodeColor = new Color("#4F46E5");
-const threatColor = new Color("#DC2626");
-const resolvedColor = new Color("#4F46E5");
+const nodeColor = new Color("#EC9AA3");
+const threatColor = new Color("#F3B3BA");
 const tempObject = new Object3D();
 const tempColor = new Color();
 
@@ -65,13 +64,11 @@ function GraphNodes({ nodes, reducedMotion }: { nodes: GraphNode[]; reducedMotio
     if (!meshRef.current) return;
     const time = clock.getElapsedTime();
 
-    // Randomly trigger threat on a node every ~6s
     if (!reducedMotion && threatRef.current === null && Math.floor(time) % 6 === 0 && time - threatStart.current > 5) {
-      threatRef.current = Math.floor(Math.random() * 5); // only first 5 nodes can be threats
+      threatRef.current = Math.floor(Math.random() * 5);
       threatStart.current = time;
     }
 
-    // Clear threat after 3s
     if (threatRef.current !== null && time - threatStart.current > 3) {
       threatRef.current = null;
     }
@@ -87,7 +84,6 @@ function GraphNodes({ nodes, reducedMotion }: { nodes: GraphNode[]; reducedMotio
       tempObject.updateMatrix();
       meshRef.current.setMatrixAt(i, tempObject.matrix);
 
-      // Color
       if (i === threatRef.current) {
         const threatProgress = (time - threatStart.current) / 3;
         const fade = threatProgress < 0.2 ? threatProgress / 0.2 : threatProgress > 0.7 ? (1 - threatProgress) / 0.3 : 1;
@@ -124,7 +120,7 @@ function GraphEdges({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[] }
     return geo;
   }, [nodes, edges]);
 
-  const material = useMemo(() => new LineBasicMaterial({ color: "#4F46E5", transparent: true, opacity: 0.2, depthWrite: false }), []);
+  const material = useMemo(() => new LineBasicMaterial({ color: "#EC9AA3", transparent: true, opacity: 0.2, depthWrite: false }), []);
 
   return <lineSegments geometry={geometry} material={material} />;
 }
@@ -160,29 +156,23 @@ function GraphPulse({ nodes, edges, reducedMotion }: { nodes: GraphNode[]; edges
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[1, 12, 12]} />
-      <meshBasicMaterial color="#818CF8" transparent opacity={0.85} />
+      <meshBasicMaterial color="#F3B3BA" transparent opacity={0.85} />
     </mesh>
   );
-}
-
-function GraphLabels({ nodes }: { nodes: GraphNode[] }) {
-  // Labels rendered as HTML overlay — handled outside canvas
-  return null;
 }
 
 function FraudGraphScene({ reducedMotion }: { reducedMotion: boolean }) {
   const groupRef = useRef<any>(null);
 
   const nodes: GraphNode[] = useMemo(() => {
-    // Arrange nodes in a loose organic layout
     const positions = [
-      new Vector3(-1.2, 0.8, 0),   // phone
-      new Vector3(-0.3, -0.2, 0.3), // upi
-      new Vector3(0.9, 0.6, -0.2),  // website
-      new Vector3(0.5, -0.8, 0.1),  // device
-      new Vector3(1.5, -0.1, 0),    // victim
-      new Vector3(2.2, -0.7, -0.1), // complaint
-      new Vector3(2.8, 0.3, 0),     // police
+      new Vector3(-1.2, 0.8, 0),
+      new Vector3(-0.3, -0.2, 0.3),
+      new Vector3(0.9, 0.6, -0.2),
+      new Vector3(0.5, -0.8, 0.1),
+      new Vector3(1.5, -0.1, 0),
+      new Vector3(2.2, -0.7, -0.1),
+      new Vector3(2.8, 0.3, 0),
     ];
     return NODE_DATA.map((n, i) => ({ ...n, position: positions[i] }));
   }, []);
@@ -225,8 +215,8 @@ export function FraudGraph() {
         gl={{ antialias: true, alpha: true }}
         style={{ width: "100%", height: "100%" }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[3, 3, 3]} intensity={0.6} />
+        <ambientLight intensity={0.3} />
+        <directionalLight position={[3, 3, 3]} intensity={0.4} color="#EC9AA3" />
         <FraudGraphScene reducedMotion={reducedMotion} />
       </Canvas>
     </div>

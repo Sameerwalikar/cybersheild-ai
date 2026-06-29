@@ -92,7 +92,7 @@ export function PulseAnimation({
     <mesh ref={meshRef} visible={false}>
       <sphereGeometry args={[1, 12, 12]} />
       <meshBasicMaterial
-        color="#818CF8"
+        color="#F3B3BA"
         transparent
         opacity={0.8}
       />

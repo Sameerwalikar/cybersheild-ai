@@ -43,25 +43,25 @@ export function AegisQuote({ reducedMotion }: AegisQuoteProps) {
         ref={quoteRef}
         className={`
           relative p-8 sm:p-10 rounded-2xl
-          bg-white/70 backdrop-blur-md
-          border border-slate-200/60
-          shadow-[0_8px_30px_rgba(0,0,0,0.04)]
+          bg-[#12121A]/70 backdrop-blur-md
+          border border-[rgba(236,154,163,0.18)]
+          shadow-[0_8px_30px_rgba(0,0,0,0.3)]
           text-center
           ${reducedMotion ? "" : "opacity-0"}
         `}
         role="figure"
         aria-label="Quote from AEGIS, CyberShield AI Guardian"
       >
-        <blockquote className="text-lg sm:text-xl text-slate-700 leading-relaxed italic">
+        <blockquote className="text-lg sm:text-xl text-[#F8F8FA] leading-relaxed italic">
           &ldquo;I don&apos;t just detect cyber threats. I understand them.<br />
           I don&apos;t just analyze data. I protect people.&rdquo;
         </blockquote>
-        <cite className="mt-4 block text-sm font-semibold text-slate-500 not-italic">
+        <cite className="mt-4 block text-sm font-semibold text-[#B6B8C4] not-italic">
           — AEGIS
         </cite>
 
         {/* Decorative accent */}
-        <div className="absolute top-4 left-6 text-4xl text-indigo-200 select-none" aria-hidden="true">
+        <div className="absolute top-4 left-6 text-4xl text-[#EC9AA3]/20 select-none" aria-hidden="true">
           &ldquo;
         </div>
       </div>

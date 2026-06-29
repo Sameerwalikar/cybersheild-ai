@@ -22,16 +22,11 @@ const notifications = [
   { title: "🤖 Deepfake Audio", message: "Synthetic speech: 94% AI confidence.", entryX: 40, entryY: 20 },
 ];
 
-// Positioned around a central area for the "surrounded" feel
 const notificationPositions = [
-  { top: "8%", left: "10%" },
-  { top: "5%", right: "12%" },
-  { top: "28%", left: "5%" },
-  { top: "25%", right: "8%" },
-  { top: "48%", left: "8%" },
-  { top: "45%", right: "10%" },
-  { top: "65%", left: "12%" },
-  { top: "62%", right: "5%" },
+  { top: "8%", left: "10%" }, { top: "5%", right: "12%" },
+  { top: "28%", left: "5%" }, { top: "25%", right: "8%" },
+  { top: "48%", left: "8%" }, { top: "45%", right: "10%" },
+  { top: "65%", left: "12%" }, { top: "62%", right: "5%" },
 ];
 
 const threats = [
@@ -59,11 +54,7 @@ export function ThreatsSection() {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(mq.matches);
-    if (mq.matches) {
-      setPhase("settled");
-      setShowCards(true);
-      setAllProtected(true);
-    }
+    if (mq.matches) { setPhase("settled"); setShowCards(true); setAllProtected(true); }
     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
@@ -72,190 +63,77 @@ export function ThreatsSection() {
   const startSequence = useCallback(() => {
     if (hasPlayed.current || reducedMotion) return;
     hasPlayed.current = true;
-
     setPhase("title");
-
-    // Phase 2-3: Spawn notifications one by one
-    const spawnDelay = 1200; // after title visible
     let spawned = 0;
     const spawnInterval = setInterval(() => {
       spawned++;
       setVisibleNotifications(spawned);
       if (spawned >= notifications.length) {
         clearInterval(spawnInterval);
-        // Phase 4: Surrounded — wait
         setPhase("surrounded");
-        setTimeout(() => {
-          // Phase 5: Scanning — protect sequentially
-          setPhase("scanning");
-          setAllProtected(true);
-          // Phase 6: Settle into card grid
-          setTimeout(() => {
-            setPhase("settled");
-            setShowCards(true);
-          }, 1800);
-        }, 2000);
+        setTimeout(() => { setPhase("scanning"); setAllProtected(true); setTimeout(() => { setPhase("settled"); setShowCards(true); }, 1800); }, 2000);
       }
     }, 750);
-
-    setTimeout(() => {
-      setPhase("notifications");
-    }, spawnDelay);
+    setTimeout(() => setPhase("notifications"), 1200);
   }, [reducedMotion]);
 
   useEffect(() => {
     if (reducedMotion || !sectionRef.current) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        titleRef.current,
-        { opacity: 0, y: 36 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.9,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 72%",
-            toggleActions: "play none none none",
-            onEnter: startSequence,
-          },
-        }
-      );
-
-      gsap.fromTo(
-        subtitleRef.current,
-        { opacity: 0, y: 24 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          delay: 0.12,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 68%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      gsap.fromTo(titleRef.current, { opacity: 0, y: 36 }, {
+        opacity: 1, y: 0, duration: 0.9, ease: "power2.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 72%", once: true, onEnter: startSequence },
+      });
+      gsap.fromTo(subtitleRef.current, { opacity: 0, y: 24 }, {
+        opacity: 1, y: 0, duration: 0.7, delay: 0.12, ease: "power2.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 68%", once: true },
+      });
     }, sectionRef);
 
     return () => ctx.revert();
   }, [reducedMotion, startSequence]);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative w-full py-24 lg:py-36 overflow-hidden"
-      aria-labelledby="threats-heading"
-    >
-      {/* Background */}
+    <section ref={sectionRef} className="relative w-full py-24 lg:py-36 overflow-hidden" aria-labelledby="threats-heading">
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full opacity-[0.025]"
-          style={{ background: "radial-gradient(circle, #4F46E5 0%, transparent 60%)" }}
-        />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full opacity-[0.03]" style={{ background: "radial-gradient(circle, #EC9AA3 0%, transparent 60%)" }} />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* Title */}
-        <h2
-          ref={titleRef}
-          id="threats-heading"
-          className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-[1.1] ${reducedMotion ? "" : "opacity-0"}`}
-        >
+        <h2 ref={titleRef} id="threats-heading" className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F8F8FA] leading-[1.1] ${reducedMotion ? "" : "opacity-0"}`}>
           Cyber Threats Hide In Plain Sight.
         </h2>
-
-        <p
-          ref={subtitleRef}
-          className={`mt-5 text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto ${reducedMotion ? "" : "opacity-0"}`}
-        >
-          Every day millions of people receive messages, calls and websites designed
-          to steal money, identities and trust. CyberShield detects these threats
-          before they become victims.
+        <p ref={subtitleRef} className={`mt-5 text-lg text-[#B6B8C4] leading-relaxed max-w-2xl mx-auto ${reducedMotion ? "" : "opacity-0"}`}>
+          Every day millions of people receive messages, calls and websites designed to steal money, identities and trust. CyberShield detects these threats before they become victims.
         </p>
 
-        {/* Floating notifications phase */}
         <AnimatePresence>
           {phase !== "settled" && phase !== "idle" && (
-            <motion.div
-              className="relative w-full h-[420px] mt-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.6 }}
-            >
-              {notifications.map((notif, i) => {
-                const pos = notificationPositions[i];
-                return (
-                  <div
-                    key={notif.title}
-                    className="absolute"
-                    style={pos as React.CSSProperties}
-                  >
-                    <ThreatNotification
-                      title={notif.title}
-                      message={notif.message}
-                      visible={i < visibleNotifications}
-                      protected={allProtected}
-                      index={i}
-                      entryX={notif.entryX}
-                      entryY={notif.entryY}
-                    />
-                  </div>
-                );
-              })}
-
-              {/* AI Scan line */}
+            <motion.div className="relative w-full h-[420px] mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.6 }}>
+              {notifications.map((notif, i) => (
+                <div key={notif.title} className="absolute" style={notificationPositions[i] as React.CSSProperties}>
+                  <ThreatNotification title={notif.title} message={notif.message} visible={i < visibleNotifications} protected={allProtected} index={i} entryX={notif.entryX} entryY={notif.entryY} />
+                </div>
+              ))}
               {phase === "scanning" && (
-                <motion.div
-                  className="absolute top-0 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-60"
-                  initial={{ y: 0 }}
-                  animate={{ y: 420 }}
-                  transition={{ duration: 1.5, ease: "easeInOut" }}
-                />
+                <motion.div className="absolute top-0 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-transparent via-[#EC9AA3] to-transparent opacity-60" initial={{ y: 0 }} animate={{ y: 420 }} transition={{ duration: 1.5, ease: "easeInOut" }} />
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Protection badge */}
         {allProtected && phase === "settled" && (
-          <motion.div
-            className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <div className="w-2 h-2 rounded-full bg-indigo-500" />
-            <span className="text-xs font-medium text-indigo-700">
-              All threats neutralized by CyberShield AI
-            </span>
+          <motion.div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#12121A] border border-[rgba(236,154,163,0.2)]" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: "easeOut" }}>
+            <div className="w-2 h-2 rounded-full bg-[#EC9AA3]" />
+            <span className="text-xs font-medium text-[#EC9AA3]">All threats neutralized by CyberShield AI</span>
           </motion.div>
         )}
 
-        {/* Final settled card grid */}
         {showCards && (
-          <motion.div
-            className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-          >
+          <motion.div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}>
             {threats.map((threat, i) => (
-              <ThreatCard
-                key={threat.title}
-                title={threat.title}
-                example={threat.example}
-                riskLevel={threat.riskLevel}
-                confidence={threat.confidence}
-                recommendation={threat.recommendation}
-                index={i}
-                protected={allProtected}
-              />
+              <ThreatCard key={threat.title} title={threat.title} example={threat.example} riskLevel={threat.riskLevel} confidence={threat.confidence} recommendation={threat.recommendation} index={i} protected={allProtected} />
             ))}
           </motion.div>
         )}

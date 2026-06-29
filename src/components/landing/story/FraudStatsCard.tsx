@@ -41,16 +41,16 @@ export function FraudStatsCard({ visible }: { visible: boolean }) {
   return (
     <div
       className="w-full max-w-xs rounded-2xl
-                 bg-white/70 backdrop-blur-md
-                 border border-slate-200/60
-                 shadow-[0_8px_30px_rgba(0,0,0,0.04)]
+                 bg-[#12121A]/70 backdrop-blur-md
+                 border border-[rgba(236,154,163,0.18)]
+                 shadow-[0_8px_30px_rgba(0,0,0,0.3)]
                  p-5 mt-8"
       role="figure"
       aria-label="Detected fraud network statistics"
     >
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+        <div className="w-2 h-2 rounded-full bg-[#EC9AA3] animate-pulse" />
+        <span className="text-xs font-medium text-[#B6B8C4] uppercase tracking-wider">
           Detected Fraud Network
         </span>
       </div>
@@ -69,8 +69,8 @@ function StatRow({ stat, visible }: { stat: StatItem; visible: boolean }) {
 
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-600">{stat.label}</span>
-      <span className="text-sm font-semibold text-slate-900 tabular-nums">
+      <span className="text-sm text-[#B6B8C4]">{stat.label}</span>
+      <span className="text-sm font-semibold text-[#F8F8FA] tabular-nums">
         {value}{stat.suffix}
       </span>
     </div>

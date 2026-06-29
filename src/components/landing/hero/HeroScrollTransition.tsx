@@ -24,13 +24,14 @@ export function HeroScrollTransition({ children }: HeroScrollTransitionProps) {
     if (!heroSection || !heroText || !heroCanvas) return;
 
     const ctx = gsap.context(() => {
-      // Pin the hero briefly while scroll begins
+      // Pin the hero section itself (not a child)
       ScrollTrigger.create({
         trigger: heroSection,
         start: "top top",
         end: "+=30%",
         pin: true,
         pinSpacing: true,
+        anticipatePin: 1,
       });
 
       // Fade out hero text on scroll
@@ -51,7 +52,7 @@ export function HeroScrollTransition({ children }: HeroScrollTransitionProps) {
         scale: 0.6,
         x: "15%",
         y: "-20%",
-        opacity: 0.7,
+        opacity: 0,
         ease: "power2.inOut",
         scrollTrigger: {
           trigger: heroSection,

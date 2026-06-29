@@ -12,8 +12,8 @@ interface ThreatNodesProps {
 }
 
 const tempObject = new Object3D();
-const threatColor = new Color("#DC2626");
-const dimColor = new Color("#DC2626").multiplyScalar(0);
+const threatColor = new Color("#EC9AA3");
+const dimColor = new Color("#EC9AA3").multiplyScalar(0);
 
 export function ThreatNodes({
   positions,
@@ -45,7 +45,6 @@ export function ThreatNodes({
     const time = clock.getElapsedTime();
     const state = stateRef.current;
 
-    // Spawn new threat node
     if (state.active.length < maxActive && time - state.lastSpawn > 2.5 + Math.random() * 2) {
       const available = candidateIndices.filter(
         (idx) => !state.active.some((a) => a.index === idx)
@@ -57,10 +56,8 @@ export function ThreatNodes({
       }
     }
 
-    // Remove expired
     state.active = state.active.filter((a) => time - a.startTime < a.duration);
 
-    // Update instances
     for (let i = 0; i < maxActive; i++) {
       if (i < state.active.length) {
         const a = state.active[i];

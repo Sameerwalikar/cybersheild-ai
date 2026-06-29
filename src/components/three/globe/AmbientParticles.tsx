@@ -43,7 +43,7 @@ export function AmbientParticles({
     <points ref={ref} geometry={geometry}>
       <pointsMaterial
         size={0.012}
-        color="#A5B4FC"
+        color="#EC9AA3"
         transparent
         opacity={0.35}
         sizeAttenuation

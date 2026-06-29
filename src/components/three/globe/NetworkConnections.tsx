@@ -28,7 +28,7 @@ export function NetworkConnections({
 }: NetworkConnectionsProps) {
   const lineRef = useRef<LineSegmentsType>(null);
 
-  const { geometry, connectionCount } = useMemo(() => {
+  const { geometry } = useMemo(() => {
     const lines: number[] = [];
     const maxDistSq = maxDistance * maxDistance;
 
@@ -62,7 +62,6 @@ export function NetworkConnections({
     return { geometry: geo, connectionCount: lines.length / 6 };
   }, [positions, count, maxDistance]);
 
-  // Shimmer: slowly vary opacity
   const materialRef = useRef<LineBasicMaterial>(null);
 
   useFrame(({ clock }) => {
@@ -70,7 +69,6 @@ export function NetworkConnections({
     const time = clock.getElapsedTime();
     const shimmer = 0.1 + Math.sin(time * 0.4) * 0.03;
 
-    // Subtle hover proximity boost
     const hoverBoost = (Math.abs(mouseX) + Math.abs(mouseY)) * 0.02;
     materialRef.current.opacity = shimmer + hoverBoost;
   });
@@ -79,7 +77,7 @@ export function NetworkConnections({
     <lineSegments ref={lineRef} geometry={geometry}>
       <lineBasicMaterial
         ref={materialRef}
-        color="#4F46E5"
+        color="#EC9AA3"
         transparent
         opacity={0.1}
         depthWrite={false}

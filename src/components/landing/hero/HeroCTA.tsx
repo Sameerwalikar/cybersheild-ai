@@ -25,10 +25,10 @@ export function HeroCTA({
       <button
         type="button"
         onClick={onPrimaryClick}
-        className="relative px-7 py-3.5 rounded-xl font-semibold text-white text-sm
-                   bg-indigo-600 shadow-lg shadow-indigo-500/20
-                   hover:bg-indigo-700 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2
+        className="relative px-7 py-3.5 rounded-xl font-semibold text-[#050508] text-sm
+                   bg-[#EC9AA3] shadow-lg shadow-[rgba(236,154,163,0.2)]
+                   hover:bg-[#F3B3BA] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(236,154,163,0.3)]
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050508]
                    active:scale-[0.98]
                    transition-all duration-200 ease-out"
         aria-label={`${primaryLabel} — Start using the CyberShield AI platform`}
@@ -39,10 +39,10 @@ export function HeroCTA({
       <button
         type="button"
         onClick={onSecondaryClick}
-        className="px-7 py-3.5 rounded-xl font-semibold text-slate-700 text-sm
-                   border border-slate-200 bg-white/60 backdrop-blur-sm
-                   hover:border-indigo-300 hover:text-indigo-700 hover:-translate-y-0.5 hover:shadow-md
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2
+        className="px-7 py-3.5 rounded-xl font-semibold text-[#F8F8FA] text-sm
+                   border border-[rgba(236,154,163,0.18)] bg-[#12121A]/60 backdrop-blur-sm
+                   hover:border-[rgba(236,154,163,0.4)] hover:text-[#F3B3BA] hover:-translate-y-0.5 hover:shadow-md hover:shadow-[rgba(236,154,163,0.08)]
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050508]
                    active:scale-[0.98]
                    transition-all duration-200 ease-out"
         aria-label={`${secondaryLabel} — Learn more about CyberShield AI features`}

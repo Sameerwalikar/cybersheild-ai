@@ -72,7 +72,7 @@ export function AegisFeatures({ onHover, reducedMotion }: AegisFeaturesProps) {
       {features.map((feature, i) => (
         <motion.div
           key={feature.title}
-          className="group flex items-start gap-4 p-3 -ml-3 rounded-xl transition-colors duration-200 hover:bg-indigo-50/40 cursor-default"
+          className="group flex items-start gap-4 p-3 -ml-3 rounded-xl transition-colors duration-200 hover:bg-[rgba(236,154,163,0.05)] cursor-default"
           variants={itemVariant}
           initial={reducedMotion ? "visible" : "hidden"}
           whileInView="visible"
@@ -86,12 +86,12 @@ export function AegisFeatures({ onHover, reducedMotion }: AegisFeaturesProps) {
           role="article"
           aria-label={`${feature.title}: ${feature.description}`}
         >
-          <div className="mt-0.5 w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100/60 flex items-center justify-center text-indigo-600 flex-shrink-0 group-hover:bg-indigo-100/70 transition-colors duration-200">
+          <div className="mt-0.5 w-9 h-9 rounded-lg bg-[#12121A] border border-[rgba(236,154,163,0.18)] flex items-center justify-center text-[#EC9AA3] flex-shrink-0 group-hover:bg-[rgba(236,154,163,0.1)] transition-colors duration-200">
             {feature.icon}
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-slate-900">{feature.title}</h4>
-            <p className="text-sm text-slate-500 mt-0.5">{feature.description}</p>
+            <h4 className="text-sm font-semibold text-[#F8F8FA]">{feature.title}</h4>
+            <p className="text-sm text-[#B6B8C4] mt-0.5">{feature.description}</p>
           </div>
         </motion.div>
       ))}
