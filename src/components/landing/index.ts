@@ -6,3 +6,4 @@ export { AegisSection } from "./aegis";
 export { DetectionSection } from "./detection";
 export { JourneySection } from "./journey";
 export { CommandSection } from "./command";
+export { FinaleSection, PremiumFooter } from "./finale";

@@ -32,6 +32,14 @@ const CommandSection = dynamic(
   () => import("@/components/landing/command").then((m) => m.CommandSection),
   { ssr: true }
 );
+const FinaleSection = dynamic(
+  () => import("@/components/landing/finale").then((m) => m.FinaleSection),
+  { ssr: true }
+);
+const PremiumFooter = dynamic(
+  () => import("@/components/landing/finale").then((m) => m.PremiumFooter),
+  { ssr: true }
+);
 
 export default function HomePage() {
   useEffect(() => {
@@ -59,6 +67,8 @@ export default function HomePage() {
         <DetectionSection />
         <JourneySection />
         <CommandSection />
+        <FinaleSection />
+        <PremiumFooter />
       </div>
     </main>
   );

@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
-// Shared premium easing
 const ease = [0.22, 0.03, 0.26, 1] as [number, number, number, number];
 
 const textReveal = {
@@ -47,44 +47,40 @@ export function HeroContent() {
         animate="visible"
         custom={0.8}
       >
-        <motion.button
-          type="button"
-          className="relative px-7 py-3.5 rounded-xl font-semibold text-[#050508] text-sm
-                     bg-[#EC9AA3]
-                     shadow-[0_2px_8px_rgba(236,154,163,0.2)]
-                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050508]
-                     transition-all duration-200 ease-out"
-          whileHover={{
-            y: -2,
-            boxShadow: "0 8px 24px rgba(236,154,163,0.3)",
-            scale: 1.02,
-          }}
+        <motion.div
+          whileHover={{ y: -2, scale: 1.02 }}
           whileTap={{ scale: 0.97, y: 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          aria-label="Launch the CyberShield AI Intelligence platform"
         >
-          Launch Intelligence
-        </motion.button>
+          <Link
+            href="/select-role"
+            className="inline-flex px-7 py-3.5 rounded-xl font-semibold text-[#050508] text-sm
+                       bg-[#EC9AA3]
+                       shadow-[0_2px_8px_rgba(236,154,163,0.2)]
+                       hover:shadow-[0_8px_24px_rgba(236,154,163,0.3)]
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050508]
+                       transition-shadow duration-200 ease-out"
+          >
+            Launch Intelligence
+          </Link>
+        </motion.div>
 
-        <motion.button
-          type="button"
-          className="px-7 py-3.5 rounded-xl font-semibold text-[#F8F8FA] text-sm
-                     border border-[rgba(236,154,163,0.18)] bg-[#12121A]/70 backdrop-blur-sm
-                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050508]
-                     transition-all duration-200 ease-out"
-          whileHover={{
-            y: -2,
-            borderColor: "rgba(236,154,163,0.4)",
-            color: "#F3B3BA",
-            boxShadow: "0 4px 16px rgba(236,154,163,0.08)",
-            backgroundColor: "rgba(18,18,26,0.9)",
-          }}
+        <motion.div
+          whileHover={{ y: -2 }}
           whileTap={{ scale: 0.97, y: 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          aria-label="Explore the CyberShield AI platform features"
         >
-          Explore Platform
-        </motion.button>
+          <Link
+            href="/select-role?role=police"
+            className="inline-flex px-7 py-3.5 rounded-xl font-semibold text-[#F8F8FA] text-sm
+                       border border-[rgba(236,154,163,0.18)] bg-[#12121A]/70 backdrop-blur-sm
+                       hover:border-[rgba(236,154,163,0.4)] hover:text-[#F3B3BA] hover:shadow-[0_4px_16px_rgba(236,154,163,0.08)]
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050508]
+                       transition-all duration-200 ease-out"
+          >
+            Explore Platform
+          </Link>
+        </motion.div>
       </motion.div>
     </div>
   );
