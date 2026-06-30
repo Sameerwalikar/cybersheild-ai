@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { AuthInput, AuthCard, AuthBranding } from "@/components/auth";
+import { useAuthStore } from "@/store/auth";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -46,7 +47,9 @@ export default function LoginPage() {
   const config = roleConfig[role];
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const login = useAuthStore((s) => s.login);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -54,9 +57,30 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    router.push(config.redirect);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:4000/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || "Login failed");
+        setLoading(false);
+        return;
+      }
+      const { user: userData, accessToken } = json.data;
+      login(
+        { id: userData.id, name: userData.name, email: userData.email, role: userData.role.toLowerCase() },
+        accessToken
+      );
+      router.push(config.redirect);
+    } catch (err: any) {
+      setError("Unable to connect to server.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -133,6 +157,8 @@ export default function LoginPage() {
               )}
               {loading ? "Signing in..." : "Sign In"}
             </button>
+
+            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
           </form>
 
           <div className="relative my-6">

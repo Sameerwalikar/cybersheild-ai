@@ -18,15 +18,18 @@ interface NavItem {
 const citizenNav: NavItem[] = [
   { label: "Dashboard", href: "/citizen-dashboard", icon: <HomeIcon /> },
   { label: "Threat Scanner", href: "/scan", icon: <ScanIcon /> },
+  { label: "Evidence", href: "/my-evidence", icon: <FileIcon /> },
   { label: "History", href: "/threats", icon: <ClockIcon /> },
   { label: "Reports", href: "/reports", icon: <FileIcon /> },
-  { label: "AEGIS", href: "/citizen-dashboard", icon: <BotIcon /> },
+  { label: "AEGIS", href: "/aegis", icon: <BotIcon /> },
   { label: "Settings", href: "/citizen-settings", icon: <GearIcon /> },
-  { label: "Profile", href: "/citizen-settings", icon: <UserIcon /> },
 ];
 
 const policeNav: NavItem[] = [
   { label: "Dashboard", href: "/police-dashboard", icon: <HomeIcon /> },
+  { label: "Search", href: "/search", icon: <SearchIcon /> },
+  { label: "Threat Map", href: "/threat-map", icon: <GraphIcon /> },
+  { label: "Reports", href: "/police-reports", icon: <FileIcon /> },
   { label: "Investigations", href: "/investigations", icon: <SearchIcon /> },
   { label: "Evidence", href: "/evidence", icon: <FileIcon /> },
   { label: "Fraud Network", href: "/network", icon: <GraphIcon /> },

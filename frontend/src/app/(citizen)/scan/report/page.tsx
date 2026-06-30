@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ScannerLayout, ScanButton } from "@/components/scanner";
+import { reportsApi } from "@/services/api/reports";
 
 const scamTypes = [
   "Phishing",
@@ -13,14 +15,70 @@ const scamTypes = [
 ];
 
 export default function ReportScamPage() {
+  const router = useRouter();
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Optional fields
+  const [scammerPhone, setScammerPhone] = useState("");
+  const [scammerEmail, setScammerEmail] = useState("");
+  const [scammerUpi, setScammerUpi] = useState("");
+  const [lossAmount, setLossAmount] = useState("");
+
   const isValid = category.length > 0 && description.length >= 10;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []).slice(0, 3 - files.length);
     setFiles((prev) => [...prev, ...newFiles].slice(0, 3));
+  };
+
+  const handleSubmit = async () => {
+    if (!isValid || loading) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const scammerContact: any = {};
+      if (scammerPhone) scammerContact.phone = scammerPhone;
+      if (scammerEmail) scammerContact.email = scammerEmail;
+      if (scammerUpi) scammerContact.upiId = scammerUpi;
+
+      const financialLoss: any = {};
+      if (lossAmount) {
+        financialLoss.amount = parseFloat(lossAmount);
+        financialLoss.currency = "INR";
+      }
+
+      const result = await reportsApi.create({
+        type: category,
+        description,
+        ...(Object.keys(scammerContact).length > 0 ? { scammerContact } : {}),
+        ...(Object.keys(financialLoss).length > 0 ? { financialLoss } : {}),
+        evidence: files.map((f) => f.name),
+      });
+
+      setSuccess(`Report ${result.reportNumber} submitted successfully! You can track it in the Reports section.`);
+      // Reset form
+      setCategory("");
+      setDescription("");
+      setFiles([]);
+      setScammerPhone("");
+      setScammerEmail("");
+      setScammerUpi("");
+      setLossAmount("");
+
+      // Redirect after short delay
+      setTimeout(() => router.push("/reports"), 2000);
+    } catch (err: any) {
+      setError(err.message || "Failed to submit report. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,6 +93,20 @@ export default function ReportScamPage() {
       ]}
     >
       <div className="space-y-5">
+        {/* Success message */}
+        {success && (
+          <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-400">
+            {success}
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+
         {/* Category */}
         <div>
           <label htmlFor="category" className="block text-xs font-medium text-[#B6B8C4] mb-1.5">
@@ -69,6 +141,55 @@ export default function ReportScamPage() {
           <span className="text-[10px] text-[#B6B8C4]/50 tabular-nums">{description.length}/2000</span>
         </div>
 
+        {/* Scammer Contact (optional) */}
+        <div>
+          <label className="block text-xs font-medium text-[#B6B8C4] mb-1.5">
+            Scammer Contact (optional)
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input
+              type="text"
+              value={scammerPhone}
+              onChange={(e) => setScammerPhone(e.target.value)}
+              placeholder="Phone number"
+              className="px-3 py-2.5 rounded-lg text-xs text-[#F8F8FA] bg-[#0D0D12] border border-[rgba(236,154,163,0.08)] placeholder:text-[#B6B8C4]/40 focus:outline-none focus:border-[rgba(236,154,163,0.3)] transition-all"
+            />
+            <input
+              type="email"
+              value={scammerEmail}
+              onChange={(e) => setScammerEmail(e.target.value)}
+              placeholder="Email address"
+              className="px-3 py-2.5 rounded-lg text-xs text-[#F8F8FA] bg-[#0D0D12] border border-[rgba(236,154,163,0.08)] placeholder:text-[#B6B8C4]/40 focus:outline-none focus:border-[rgba(236,154,163,0.3)] transition-all"
+            />
+            <input
+              type="text"
+              value={scammerUpi}
+              onChange={(e) => setScammerUpi(e.target.value)}
+              placeholder="UPI ID"
+              className="px-3 py-2.5 rounded-lg text-xs text-[#F8F8FA] bg-[#0D0D12] border border-[rgba(236,154,163,0.08)] placeholder:text-[#B6B8C4]/40 focus:outline-none focus:border-[rgba(236,154,163,0.3)] transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Financial Loss (optional) */}
+        <div>
+          <label htmlFor="loss" className="block text-xs font-medium text-[#B6B8C4] mb-1.5">
+            Financial Loss (optional)
+          </label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#B6B8C4]">₹</span>
+            <input
+              id="loss"
+              type="number"
+              value={lossAmount}
+              onChange={(e) => setLossAmount(e.target.value)}
+              placeholder="Amount lost"
+              min="0"
+              className="flex-1 px-3 py-2.5 rounded-lg text-xs text-[#F8F8FA] bg-[#0D0D12] border border-[rgba(236,154,163,0.08)] placeholder:text-[#B6B8C4]/40 focus:outline-none focus:border-[rgba(236,154,163,0.3)] transition-all"
+            />
+          </div>
+        </div>
+
         {/* Evidence upload */}
         <div>
           <label className="block text-xs font-medium text-[#B6B8C4] mb-1.5">
@@ -91,7 +212,13 @@ export default function ReportScamPage() {
           <p className="text-[10px] text-[#B6B8C4]/50 mt-1">Max 3 files, 10MB each</p>
         </div>
 
-        <ScanButton label="Submit Report" disabled={!isValid} />
+        <button
+          onClick={handleSubmit}
+          disabled={!isValid || loading}
+          className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed bg-[#EC9AA3] text-[#050508] hover:shadow-[0_4px_16px_rgba(236,154,163,0.2)] hover:-translate-y-0.5 active:scale-[0.98]"
+        >
+          {loading ? "Submitting..." : "Submit Report"}
+        </button>
       </div>
     </ScannerLayout>
   );

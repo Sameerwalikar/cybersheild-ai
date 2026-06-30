@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+
 interface TopBarProps {
   role: "citizen" | "police" | "organization";
 }
@@ -11,6 +14,17 @@ const roleLabels = {
 };
 
 export function TopBar({ role }: TopBarProps) {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  const handleSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && query.trim().length >= 2) {
+      if (role === "police") {
+        router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      }
+    }
+  }, [query, role, router]);
+
   return (
     <header className="flex items-center justify-between h-16 px-6 border-b border-[rgba(236,154,163,0.06)] bg-[#0D0D12]/30 backdrop-blur-sm">
       {/* Search */}
@@ -20,6 +34,9 @@ export function TopBar({ role }: TopBarProps) {
         </svg>
         <input
           type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleSearch}
           placeholder="Search threats, reports, investigations..."
           className="flex-1 bg-transparent text-sm text-[#F8F8FA] placeholder:text-[#B6B8C4]/40 outline-none"
           aria-label="Search"

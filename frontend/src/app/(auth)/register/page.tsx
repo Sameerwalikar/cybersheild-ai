@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const role = searchParams.get("role") || "citizen";
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -38,9 +39,25 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    router.push(`/login?role=${role}`);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:4000/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: data.name, email: data.email, password: data.password, role }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || "Registration failed");
+        setLoading(false);
+        return;
+      }
+      router.push(`/login?role=${role}`);
+    } catch {
+      setError("Unable to connect to server.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -141,6 +158,8 @@ export default function RegisterPage() {
               )}
               {loading ? "Creating account..." : "Create Account"}
             </button>
+
+            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
           </form>
 
           <p className="mt-6 text-center text-xs text-[#B6B8C4]">
