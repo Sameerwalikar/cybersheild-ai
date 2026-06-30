@@ -100,8 +100,10 @@ export class NvidiaProvider implements AIProvider {
 
       if (!res.ok) {
         const errText = await res.text().catch(() => "Unknown error");
+        console.error(`NVIDIA API error [${model}]: ${res.status} — ${errText.slice(0, 300)}`);
         if (res.status === 401) throw new Error("NVIDIA API: Invalid API key");
         if (res.status === 429) throw new Error("NVIDIA API: Rate limit exceeded");
+        if (res.status === 404) throw new Error(`NVIDIA API: Model not found — ${model}`);
         throw new Error(`NVIDIA API error (${res.status}): ${errText.slice(0, 200)}`);
       }
 
