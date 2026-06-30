@@ -54,14 +54,9 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
-    try {
-      const { authApi } = await import("@/services/api/auth");
-      await authApi.login({ email: data.email, password: data.password });
-      router.push(config.redirect);
-    } catch (err: any) {
-      setLoading(false);
-      // Show inline error if needed — for now just stop loading
-    }
+    await new Promise((r) => setTimeout(r, 1500));
+    setLoading(false);
+    router.push(config.redirect);
   };
 
   return (

@@ -38,13 +38,9 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     setLoading(true);
-    try {
-      const { authApi } = await import("@/services/api/auth");
-      await authApi.register({ name: data.name, email: data.email, password: data.password, role: role.toUpperCase() });
-      router.push(`/login?role=${role}`);
-    } catch (err: any) {
-      setLoading(false);
-    }
+    await new Promise((r) => setTimeout(r, 1500));
+    setLoading(false);
+    router.push(`/login?role=${role}`);
   };
 
   return (
