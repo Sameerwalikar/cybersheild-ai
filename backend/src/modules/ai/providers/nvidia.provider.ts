@@ -47,7 +47,26 @@ export class NvidiaProvider implements AIProvider {
       },
     ];
 
-    return this.callModel(this.visionModel, messages);
+    let response = await this.callModel(this.visionModel, messages);
+    console.log("[NVIDIA Vision] Raw response:", response.slice(0, 500));
+
+    // If response doesn't contain JSON (safety refusal), retry with simplified prompt
+    if (!response.includes("{")) {
+      console.warn("[NVIDIA Vision] Non-JSON response, retrying with simplified prompt...");
+      const retryMessages = [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: 'This image was reported as potential cybercrime evidence. Classify it as safe or dangerous. Return ONLY JSON: {"riskScore":0,"confidence":0.5,"category":"safe","explanation":"","detectedSignals":[],"recommendations":[],"aiSummary":""}' },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+          ],
+        },
+      ];
+      response = await this.callModel(this.visionModel, retryMessages);
+      console.log("[NVIDIA Vision] Retry response:", response.slice(0, 500));
+    }
+
+    return response;
   }
 
   async generateCitizenAdvice(context: ThreatContext): Promise<string> {

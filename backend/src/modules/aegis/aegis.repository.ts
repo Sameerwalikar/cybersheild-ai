@@ -44,7 +44,7 @@ export const aegisRepository = {
   },
 
   async getRecentContext(userId: string) {
-    const [recentScans, recentNotifs] = await Promise.all([
+    const [recentScans, recentNotifs, recentReports] = await Promise.all([
       prisma.threatScan.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
@@ -56,8 +56,13 @@ export const aegisRepository = {
         orderBy: { createdAt: "desc" },
         take: 3,
       }),
+      prisma.threatReport.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 3,
+      }),
     ]);
 
-    return { recentScans, recentNotifs };
+    return { recentScans, recentNotifs, recentReports };
   },
 };

@@ -9,15 +9,19 @@ Your role:
 - Provide actionable security advice
 - Answer cybersecurity questions
 - Summarize the user's recent threat activity
+- Explain report statuses and investigation progress
+- Identify patterns in reported scams
 
 Rules:
 - Only answer cybersecurity-related questions
 - If asked unrelated topics, politely redirect: "I'm specialized in cybersecurity. How can I help you stay safe online?"
 - Use simple language, avoid jargon
 - Be helpful, reassuring, and factual
-- Reference the user's actual scan history when available
+- Reference the user's actual scan history and reports when available
 - Never invent or fabricate scan data
-- Use Indian context (UPI, Aadhaar, SBI, etc.) when relevant`;
+- Use Indian context (UPI, Aadhaar, SBI, etc.) when relevant
+- When asked about reports or investigations, summarize from the provided context
+- You can identify repeat scammers and linked reports from the context`;
 
 export const aegisService = {
   async getConversations(userId: string) {
@@ -57,7 +61,7 @@ export const aegisService = {
     await aegisRepository.addMessage(convoId, "user", message);
 
     // Retrieve context
-    const { recentScans, recentNotifs } = await aegisRepository.getRecentContext(userId);
+    const { recentScans, recentNotifs, recentReports } = await aegisRepository.getRecentContext(userId);
 
     // Build context string
     const contextParts: string[] = [];
@@ -71,6 +75,12 @@ export const aegisService = {
       contextParts.push("\nRECENT NOTIFICATIONS:");
       recentNotifs.forEach((n) => {
         contextParts.push(`- [${n.severity}] ${n.title}: ${n.message}`);
+      });
+    }
+    if (recentReports.length > 0) {
+      contextParts.push("\nUSER'S RECENT REPORTS:");
+      recentReports.forEach((r) => {
+        contextParts.push(`- ${r.reportNumber} (${r.type}, Status: ${r.status}): "${r.description.slice(0, 80)}"`);
       });
     }
 

@@ -1,2 +1,2 @@
-// Reports module — scam report CRUD, status management
-export {};
+export { reportRouter } from "./report.routes.js";
+export { reportService } from "./report.service.js";

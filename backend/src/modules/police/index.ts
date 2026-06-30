@@ -1,2 +1,2 @@
-// Police module — investigations, fraud networks, analytics
-export {};
+export { policeRouter } from "./police.routes.js";
+export { policeService } from "./police.service.js";

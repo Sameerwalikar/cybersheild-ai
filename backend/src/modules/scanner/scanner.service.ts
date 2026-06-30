@@ -1,6 +1,9 @@
 import { scannerRepository } from "./scanner.repository.js";
 import { analyzeMessage, analyzeUrl, analyzeQr, analyzeUpi, analyzeVoice } from "./risk-engine.js";
 import { aiService } from "../ai/index.js";
+import { notificationService } from "../notifications/index.js";
+import { graphService } from "../graph/index.js";
+import { timelineService } from "../timeline/index.js";
 import type { ScanType } from "@prisma/client";
 
 interface ScanInput {
@@ -46,7 +49,23 @@ export const scannerService = {
       signals: result.signals,
     });
 
-    // Step 3: AI enrichment (non-blocking — falls back to rule engine output)
+    // Step 3: Create notification (non-blocking)
+    notificationService.notifyScanComplete(input.userId, scan.id, result.riskLevel, result.riskScore, input.scanType).catch(() => {});
+
+    // Step 3b: Graph intelligence (non-blocking)
+    graphService.processScan(scan.id, input.content, result.riskLevel).catch(() => {});
+
+    // Step 3c: Timeline event (non-blocking)
+    timelineService.publish({
+      type: "THREAT_SCAN",
+      actorId: input.userId,
+      title: `${input.scanType} scan completed`,
+      description: `Risk: ${result.riskScore}/100 (${result.riskLevel})`,
+      severity: result.riskScore >= 60 ? "critical" : result.riskScore >= 30 ? "warning" : "info",
+      relatedAnalysis: analysis.id,
+    }).catch(() => {});
+
+    // Step 4: AI enrichment (non-blocking — falls back to rule engine output)
     const threatContext = {
       scanType: input.scanType.toLowerCase() as any,
       content: input.content,
@@ -154,6 +173,22 @@ export const scannerService = {
         description: s,
       })),
     });
+
+    // Notification (non-blocking)
+    notificationService.notifyScanComplete(input.userId, scan.id, riskLevel, aiResult.riskScore, "IMAGE").catch(() => {});
+
+    // Graph (non-blocking)
+    graphService.processScan(scan.id, aiResult.explanation + " " + aiResult.detectedSignals.join(" "), riskLevel).catch(() => {});
+
+    // Timeline (non-blocking)
+    timelineService.publish({
+      type: "THREAT_SCAN",
+      actorId: input.userId,
+      title: "Image scan completed",
+      description: `Risk: ${aiResult.riskScore}/100 (${riskLevel})`,
+      severity: aiResult.riskScore >= 60 ? "critical" : aiResult.riskScore >= 30 ? "warning" : "info",
+      relatedAnalysis: analysis.id,
+    }).catch(() => {});
 
     return {
       id: analysis.id,

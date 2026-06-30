@@ -50,8 +50,11 @@ enum RiskLevel {
 enum ReportStatus {
   SUBMITTED
   UNDER_REVIEW
+  INVESTIGATING
+  ACTION_TAKEN
   RESOLVED
   REJECTED
+  ARCHIVED
 }
 
 enum ReportPriority {
@@ -115,9 +118,12 @@ model User {
   notifications Notification[]
   auditLogs     AuditLog[]
   conversations Conversation[]
+  evidenceUploads EvidenceUpload[]
 
   // Police-specific
   assignedInvestigations Investigation[] @relation("AssignedOfficer")
+  assignedIncidents     Incident[]       @relation("IncidentOfficer")
+  createdIncidents      Incident[]       @relation("IncidentCreator")
 
   @@index([email])
   @@index([role, status])
@@ -264,6 +270,10 @@ model ThreatReport {
   status         ReportStatus   @default(SUBMITTED)
   priority       ReportPriority @default(MEDIUM)
   assignedTo     String?
+  aiSummary      String?
+  internalNotes  String[]
+  acknowledgement String?
+  scammerProfileId String?
   occurredAt     DateTime?
   resolvedAt     DateTime?
   createdAt      DateTime       @default(now())
@@ -347,6 +357,69 @@ model FraudNetwork {
   @@map("fraud_networks")
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// INCIDENT MANAGEMENT
+// ─────────────────────────────────────────────────────────────────────
+
+enum IncidentStatus {
+  NEW
+  UNDER_REVIEW
+  INVESTIGATING
+  ACTION_TAKEN
+  RESOLVED
+  ARCHIVED
+}
+
+enum IncidentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Incident {
+  id               String           @id @default(uuid())
+  incidentId       String           @unique
+  title            String
+  description      String?
+  priority         IncidentPriority @default(MEDIUM)
+  severity         String           @default("medium")
+  status           IncidentStatus   @default(NEW)
+  assignedTo       String?
+  createdBy        String
+  resolutionSummary String?
+  evidenceCount    Int              @default(0)
+  relatedReportIds String[]
+  relatedScanIds   String[]
+  relatedNodeIds   String[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  officer  User? @relation("IncidentOfficer", fields: [assignedTo], references: [id])
+  creator  User  @relation("IncidentCreator", fields: [createdBy], references: [id])
+  timeline IncidentEvent[]
+
+  @@index([status, priority])
+  @@index([assignedTo])
+  @@index([createdBy])
+  @@map("incidents")
+}
+
+model IncidentEvent {
+  id         String   @id @default(uuid())
+  incidentId String
+  eventType  String
+  description String
+  actorId    String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+  @@map("incident_events")
+}
+
 model Evidence {
   id              String       @id @default(uuid())
   type            EvidenceType
@@ -367,6 +440,26 @@ model Evidence {
 // ─────────────────────────────────────────────────────────────────────
 // SYSTEM
 // ─────────────────────────────────────────────────────────────────────
+
+model TimelineEvent {
+  id               String   @id @default(uuid())
+  type             String
+  actorType        String   @default("user") // user | system | ai
+  actorId          String?
+  title            String
+  description      String?
+  severity         String   @default("info") // info | warning | critical
+  metadata         Json?
+  relatedAnalysis  String?
+  relatedIncident  String?
+  relatedEvidence  String?
+  relatedReport    String?
+  createdAt        DateTime @default(now())
+
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+  @@map("timeline_events")
+}
 
 model AuditLog {
   id        String   @id @default(uuid())
@@ -392,6 +485,121 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 
   @@map("system_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EVIDENCE UPLOADS
+// ─────────────────────────────────────────────────────────────────────
+
+model EvidenceUpload {
+  id              String   @id @default(uuid())
+  userId          String
+  filename        String
+  mimeType        String
+  fileSize        Int
+  fileHash        String
+  storagePath     String?
+  visionSummary   String?
+  detectedEntities Json?
+  confidence      Float?
+  riskScore       Int?
+  riskLevel       String?
+  analysisId      String?
+  status          String   @default("pending_review")
+  acknowledgement String?
+  internalNotes   String[]
+  assignedTo      String?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fileHash])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("evidence_uploads")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FRAUD INTELLIGENCE GRAPH
+// ─────────────────────────────────────────────────────────────────────
+
+enum GraphEntityType {
+  PHONE
+  EMAIL
+  UPI
+  DOMAIN
+  URL
+  IP
+  BANK_ACCOUNT
+  DEVICE
+  QR_CONTENT
+}
+
+model GraphNode {
+  id            String          @id @default(uuid())
+  entityType    GraphEntityType
+  value         String
+  normalizedVal String
+  occurrences   Int             @default(1)
+  riskLevel     RiskLevel       @default(SAFE)
+  firstSeen     DateTime        @default(now())
+  lastSeen      DateTime        @default(now())
+  metadata      Json?
+
+  edgesFrom GraphEdge[] @relation("EdgeFrom")
+  edgesTo   GraphEdge[] @relation("EdgeTo")
+
+  @@unique([entityType, normalizedVal])
+  @@index([entityType])
+  @@index([normalizedVal])
+  @@map("graph_nodes")
+}
+
+model GraphEdge {
+  id         String   @id @default(uuid())
+  fromNodeId String
+  toNodeId   String
+  edgeType   String   // CONNECTED_TO, USES, SHARES, APPEARS_WITH, REPORTED_WITH
+  weight     Int      @default(1)
+  scanId     String?
+  createdAt  DateTime @default(now())
+
+  fromNode GraphNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   GraphNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([scanId])
+  @@map("graph_edges")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SCAMMER PROFILES (Intelligence Layer)
+// ─────────────────────────────────────────────────────────────────────
+
+model ScammerProfile {
+  id            String   @id @default(uuid())
+  phones        String[]
+  emails        String[]
+  upiIds        String[]
+  domains       String[]
+  urls          String[]
+  walletIds     String[]
+  aliases       String[]
+  threatLevel   RiskLevel @default(LOW)
+  occurrences   Int       @default(1)
+  totalReports  Int       @default(1)
+  reportIds     String[]
+  graphNodeIds  String[]
+  metadata      Json?
+  firstSeen     DateTime  @default(now())
+  lastSeen      DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([phones])
+  @@index([emails])
+  @@index([upiIds])
+  @@map("scammer_profiles")
 }
 
 // ─────────────────────────────────────────────────────────────────────
