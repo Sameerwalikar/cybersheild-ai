@@ -1,8 +1,12 @@
+"use client";
+
+import { Suspense } from "react";
+import { SettingsPage } from "@/components/settings/SettingsPage";
+
 export default function PoliceSettingsPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-[#F8F8FA]">Settings</h1>
-      <p className="mt-2 text-sm text-[#B6B8C4]">Department and user preferences.</p>
-    </div>
+    <Suspense fallback={<div className="h-64 rounded-xl bg-[rgba(236,154,163,0.03)] animate-pulse" />}>
+      <SettingsPage role="police" />
+    </Suspense>
   );
 }

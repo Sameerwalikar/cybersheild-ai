@@ -64,6 +64,9 @@ export interface NotificationsResponse {
 }
 
 export const dashboardApi = {
+  // New: single request for all dashboard data
+  getAll: () => get<{ overview: DashboardOverview; history: DashboardHistoryItem[]; timeline: TimelinePoint[]; insights: DashboardInsights; notifications: NotificationsResponse }>("/dashboard/all"),
+  // Individual endpoints kept for backwards compatibility
   getOverview: () => get<DashboardOverview>("/dashboard/overview"),
   getHistory: () => get<DashboardHistoryItem[]>("/dashboard/history"),
   getTimeline: (days = 7) => get<TimelinePoint[]>(`/dashboard/timeline?days=${days}`),

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useRef, useCallback, memo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { AegisModel } from "./AegisModel";
 
 interface AegisSceneProps {
@@ -92,7 +92,6 @@ export const AegisScene = memo(function AegisScene({ onHoverChange }: AegisScene
 
         <Suspense fallback={null}>
           <AegisModel reducedMotion={reducedMotion} hovered={hovered} />
-          <Environment preset="night" environmentIntensity={0.2} />
         </Suspense>
 
         <Platform hovered={hovered} />

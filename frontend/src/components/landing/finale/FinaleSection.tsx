@@ -25,8 +25,8 @@ function seededPos(seed: number) {
 }
 
 const CONVERGENCE_PARTICLES = Array.from({ length: 16 }, (_, i) => ({
-  startX: seededPos(i * 7 + 1) * 80 + 10,
-  startY: seededPos(i * 7 + 2) * 60 + 20,
+  startX: Math.round(seededPos(i * 7 + 1) * 800 + 100) / 10,
+  startY: Math.round(seededPos(i * 7 + 2) * 600 + 200) / 10,
 }));
 
 export function FinaleSection() {
