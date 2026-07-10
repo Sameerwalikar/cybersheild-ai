@@ -4,6 +4,22 @@ import { sendSuccess } from "../../utils/response.js";
 import type { AuthenticatedRequest } from "../../types/index.js";
 
 export const dashboardController = {
+  // NEW: single endpoint that returns everything in one round trip
+  async all(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = (req as AuthenticatedRequest).user!;
+      // Run all 4 fast queries in parallel — insights returns rule-based instantly
+      const [overview, history, timeline, insights, notifications] = await Promise.all([
+        dashboardService.getOverview(user.id),
+        dashboardService.getHistory(user.id),
+        dashboardService.getTimeline(user.id, 7),
+        dashboardService.getInsights(user.id),
+        dashboardService.getNotifications(user.id),
+      ]);
+      sendSuccess(res, { overview, history, timeline, insights, notifications });
+    } catch (err) { next(err); }
+  },
+
   async overview(req: Request, res: Response, next: NextFunction) {
     try {
       const user = (req as AuthenticatedRequest).user!;

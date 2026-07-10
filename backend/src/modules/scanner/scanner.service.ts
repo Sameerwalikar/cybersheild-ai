@@ -4,6 +4,7 @@ import { aiService } from "../ai/index.js";
 import { notificationService } from "../notifications/index.js";
 import { graphService } from "../graph/index.js";
 import { timelineService } from "../timeline/index.js";
+import { dashboardService } from "../dashboard/dashboard.service.js";
 import type { ScanType } from "@prisma/client";
 
 interface ScanInput {
@@ -51,6 +52,9 @@ export const scannerService = {
 
     // Step 3: Create notification (non-blocking)
     notificationService.notifyScanComplete(input.userId, scan.id, result.riskLevel, result.riskScore, input.scanType).catch(() => {});
+
+    // Step 3a: Invalidate dashboard cache so next load reflects this scan immediately
+    dashboardService.invalidateUser(input.userId);
 
     // Step 3b: Graph intelligence (non-blocking)
     graphService.processScan(scan.id, input.content, result.riskLevel).catch(() => {});

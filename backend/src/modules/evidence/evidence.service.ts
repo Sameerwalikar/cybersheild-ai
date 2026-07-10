@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { aiService } from "../ai/index.js";
 import { notificationService } from "../notifications/index.js";
 import { graphService } from "../graph/index.js";
+import { dashboardService } from "../dashboard/dashboard.service.js";
 import { AppError } from "../../utils/AppError.js";
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "application/pdf"];
@@ -106,6 +107,9 @@ export const evidenceService = {
       relatedId: record.id,
       actionUrl: `/evidence`,
     }).catch(() => {});
+
+    // Invalidate dashboard cache (non-blocking)
+    dashboardService.invalidateUser(input.userId);
 
     // Graph extraction (non-blocking)
     if (analysisResult.explanation) {

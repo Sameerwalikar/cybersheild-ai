@@ -21,14 +21,14 @@ export class NvidiaProvider implements AIProvider {
     }
   }
 
-  async analyzeText(prompt: string, systemPrompt?: string): Promise<string> {
+  async analyzeText(prompt: string, systemPrompt?: string, maxTokens = 512): Promise<string> {
     const messages: any[] = [];
     if (systemPrompt) {
       messages.push({ role: "system", content: systemPrompt });
     }
     messages.push({ role: "user", content: prompt });
 
-    return this.callModel(this.textModel, messages);
+    return this.callModel(this.textModel, messages, maxTokens);
   }
 
   async analyzeImage(imageBase64: string, mimeType: string, prompt: string): Promise<string> {
@@ -47,7 +47,7 @@ export class NvidiaProvider implements AIProvider {
       },
     ];
 
-    let response = await this.callModel(this.visionModel, messages);
+    let response = await this.callModel(this.visionModel, messages, 1024);
     console.log("[NVIDIA Vision] Raw response:", response.slice(0, 500));
 
     // If response doesn't contain JSON (safety refusal), retry with simplified prompt
@@ -62,7 +62,7 @@ export class NvidiaProvider implements AIProvider {
           ],
         },
       ];
-      response = await this.callModel(this.visionModel, retryMessages);
+      response = await this.callModel(this.visionModel, retryMessages, 512);
       console.log("[NVIDIA Vision] Retry response:", response.slice(0, 500));
     }
 
@@ -70,18 +70,22 @@ export class NvidiaProvider implements AIProvider {
   }
 
   async generateCitizenAdvice(context: ThreatContext): Promise<string> {
+    // Skip AI entirely for safe/low-risk content — instant response
+    if (context.riskScore < 30) {
+      return `Your ${context.scanType} scan is safe. No action needed. Continue staying vigilant online.`;
+    }
     const prompt = buildCitizenAdvicePrompt(context);
-    return this.analyzeText(prompt, "You are AEGIS, a friendly cybersecurity assistant for Indian citizens.");
+    return this.analyzeText(prompt, "You are AEGIS, a friendly cybersecurity assistant for Indian citizens.", 256);
   }
 
   async generatePoliceSummary(context: ThreatContext): Promise<string> {
     const prompt = buildPoliceSummaryPrompt(context);
-    return this.analyzeText(prompt, "You are a cybercrime intelligence analyst.");
+    return this.analyzeText(prompt, "You are a cybercrime intelligence analyst.", 512);
   }
 
   async extractThreatSignals(content: string): Promise<string[]> {
     const prompt = `Extract all threat indicators from this content. Return as a JSON array of short strings.\nContent: "${content.slice(0, 500)}"`;
-    const response = await this.analyzeText(prompt);
+    const response = await this.analyzeText(prompt, undefined, 256);
     try {
       const match = response.match(/\[[\s\S]*?\]/);
       if (match) return JSON.parse(match[0]);
@@ -90,13 +94,18 @@ export class NvidiaProvider implements AIProvider {
   }
 
   async summarizeThreat(context: ThreatContext): Promise<string> {
-    const prompt = `Summarize this cyber threat in one sentence.\nType: ${context.scanType}, Risk: ${context.riskScore}/100, Signals: ${context.signals.map((s) => s.label).join(", ")}`;
-    return this.analyzeText(prompt);
+    // Skip AI for low-risk — instant rule-based summary
+    if (context.riskScore < 40) {
+      return `${context.scanType} content analyzed. Risk score: ${context.riskScore}/100. No significant threats detected.`;
+    }
+    const prompt = `Summarize this cyber threat in one sentence (max 20 words).\nType: ${context.scanType}, Risk: ${context.riskScore}/100, Signals: ${context.signals.slice(0, 3).map((s) => s.label).join(", ")}`;
+    return this.analyzeText(prompt, undefined, 128);
   }
 
-  private async callModel(model: string, messages: any[]): Promise<string> {
+  private async callModel(model: string, messages: any[], maxTokens = 512): Promise<string> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    // Reduce timeout from 30s → 15s — fail fast, let rule engine take over
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
     try {
       const res = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -111,7 +120,7 @@ export class NvidiaProvider implements AIProvider {
           messages,
           temperature: 0.2,
           top_p: 0.7,
-          max_tokens: 1024,
+          max_tokens: maxTokens,
           stream: false,
         }),
         signal: controller.signal,
