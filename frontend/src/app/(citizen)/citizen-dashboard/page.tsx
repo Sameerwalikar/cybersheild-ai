@@ -26,6 +26,7 @@ export default function CitizenDashboard() {
   const [notifications, setNotifications] = useState<NotificationsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState("Good morning");
+  const [activeTab, setActiveTab] = useState<"scans" | "notifications">("scans");
 
   useEffect(() => {
     const h = new Date().getHours();
@@ -52,7 +53,7 @@ export default function CitizenDashboard() {
   const scoreLabel = score >= 70 ? "Protected" : score >= 40 ? "At Risk" : "Danger";
 
   return (
-    <div className="min-h-screen space-y-8 pb-12">
+    <div className="min-h-screen space-y-6 pb-12">
       {/* ── HERO GREETING + SCORE ──────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -94,8 +95,8 @@ export default function CitizenDashboard() {
           )}
         </div>
 
-        {/* Stats strip */}
-        <div className="relative z-10 mt-8 grid grid-cols-5 divide-x divide-[rgba(236,154,163,0.06)]">
+        {/* Compact stats strip */}
+        <div className="relative z-10 mt-6 flex flex-wrap justify-around items-center py-2 px-4 rounded-xl bg-white/5 border border-white/5 text-[10px] text-[#B6B8C4]/60 gap-y-2">
           {[
             { label: "Total", value: overview?.total ?? 0, color: "#F8F8FA" },
             { label: "Safe", value: (overview?.safe ?? 0) + (overview?.low ?? 0), color: "#34d399" },
@@ -103,22 +104,92 @@ export default function CitizenDashboard() {
             { label: "High", value: overview?.high ?? 0, color: "#fb923c" },
             { label: "Critical", value: overview?.critical ?? 0, color: "#f87171" },
           ].map((s) => (
-            <div key={s.label} className="flex flex-col items-center py-1 px-2">
-              <span className="text-xl font-bold tabular-nums" style={{ color: s.color }}>{loading ? "—" : s.value}</span>
-              <span className="text-[9px] text-[#B6B8C4]/60 uppercase mt-0.5">{s.label}</span>
+            <div key={s.label} className="flex items-center gap-1.5 px-3">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
+              <span className="font-medium text-[#B6B8C4]/80">{s.label}:</span>
+              <span className="font-extrabold text-[#F8F8FA] tabular-nums">{loading ? "—" : s.value}</span>
             </div>
           ))}
+        </div>
+      </motion.div>
+
+      {/* ── EMERGENCY HELPLINES ────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05, ease }}
+        className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5 shadow-[0_0_15px_rgba(239,68,68,0.05)] relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+          <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-red-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="text-red-400">🚨</span>
+          <h3 className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Emergency & Cybercrime Helplines</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Primary CTA: 1930 */}
+          <div className="flex flex-col gap-2">
+            <a 
+              href="tel:1930" 
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-extrabold text-white bg-red-600 hover:bg-red-500 shadow-[0_4px_16px_rgba(239,68,68,0.25)] active:scale-[0.98] transition-all text-center"
+            >
+              🚨 Cyber Crime Helpline — 1930
+            </a>
+            <p className="text-[10px] text-[#B6B8C4]/60 leading-normal pl-1">
+              24/7 National Cyber Crime Helpline. Reports are logged into the Citizen Financial Cyber Fraud Reporting System to help freeze stolen funds.
+            </p>
+          </div>
+
+          {/* Secondary CTA: 112 */}
+          <div className="flex flex-col gap-2">
+            <a 
+              href="tel:112" 
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 active:scale-[0.98] transition-all text-center"
+            >
+              📞 Police Emergency — 112
+            </a>
+            <p className="text-[10px] text-[#B6B8C4]/60 leading-normal pl-1">
+              For emergencies or other serious active crimes. Real-time assistance and local patrol dispatch.
+            </p>
+          </div>
+        </div>
+
+        {/* Secondary quick-dial chips */}
+        <div className="mt-5 pt-4 border-t border-red-500/10 flex flex-wrap items-center gap-3">
+          <span className="text-[9px] font-bold text-[#B6B8C4]/40 uppercase tracking-wider">Quick Dial:</span>
+          
+          <a href="tel:1091" className="px-3 py-1 rounded-full text-[9px] font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all">
+            Women Helpline (1091)
+          </a>
+          <a href="tel:1800114949" className="px-3 py-1 rounded-full text-[9px] font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all">
+            CERT-In Response (1800-11-4949)
+          </a>
+          <a href="tel:112" className="px-3 py-1 rounded-full text-[9px] font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all">
+            National Emergency (112)
+          </a>
+
+          <a 
+            href="https://cybercrime.gov.in/Webform/Accept.aspx" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="ml-auto text-[9px] text-red-400/80 hover:text-red-400 underline font-semibold transition-colors"
+          >
+            File a detailed complaint online →
+          </a>
         </div>
       </motion.div>
 
       {/* ── QUICK ACTIONS ──────────────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1, ease }}>
         <SectionLabel>Quick Actions</SectionLabel>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-3">
           {mockQuickActions.map((action, i) => (
-            <motion.div key={action.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 + i * 0.04, ease }}>
+            <motion.div key={action.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.12 + i * 0.03, ease }}>
               <Link href={action.href}
-                className="flex flex-col items-center gap-2.5 py-4 px-2 rounded-2xl border border-[rgba(236,154,163,0.07)] bg-[#0D0D14]/80 hover:border-[rgba(236,154,163,0.22)] hover:bg-[rgba(236,154,163,0.03)] hover:-translate-y-1 active:scale-[0.96] transition-all duration-200 group"
+                className="perspective-card flex flex-col items-center gap-2.5 py-4 px-2 rounded-2xl border border-[rgba(236,154,163,0.07)] bg-[#0D0D14]/80 hover:border-[rgba(236,154,163,0.22)] hover:bg-[rgba(236,154,163,0.03)] active:scale-[0.96] transition-all duration-200 group"
               >
                 <div className="w-9 h-9 rounded-xl bg-[rgba(236,154,163,0.07)] group-hover:bg-[rgba(236,154,163,0.12)] flex items-center justify-center transition-colors duration-200">
                   <ActionIcon type={action.icon} />
@@ -130,87 +201,128 @@ export default function CitizenDashboard() {
         </div>
       </motion.div>
 
-      {/* ── MAIN GRID ──────────────────────────────────────────────── */}
+      {/* ── MAIN GRID (TABBED INTERFACE) ────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* Recent Scans — 2/3 width */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2, ease }} className="lg:col-span-2">
-          <GlassCard title="Recent Scans" icon={<AnalysisIcon />} action={<Link href="/threats" className="text-[9px] text-[#EC9AA3]/70 hover:text-[#EC9AA3] transition-colors uppercase tracking-wider">View all →</Link>}>
-            {loading ? <SkeletonRows n={5} /> : history.length > 0 ? (
-              <div className="space-y-1.5">
-                {history.slice(0, 6).map((item, i) => {
-                  const color = riskColor[item.riskLevel] || "#B6B8C4";
-                  return (
-                    <motion.div key={item.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: i * 0.04, ease }}>
-                      <Link href="/scan/analysis"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[rgba(236,154,163,0.03)] border border-transparent hover:border-[rgba(236,154,163,0.08)] transition-all duration-150 group"
-                      >
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                          style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
-                          {scanTypeIcon[item.scanType] || "🔍"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-[#F8F8FA] truncate group-hover:text-[#EC9AA3] transition-colors">{item.content || item.scanType}</p>
-                          <p className="text-[9px] text-[#B6B8C4]/50 mt-0.5 uppercase tracking-wider">{item.scanType} · {new Date(item.timestamp).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: `${color}18`, color }}>{riskLabel[item.riskLevel] || item.riskLevel}</div>
-                          <span className="text-sm font-bold tabular-nums" style={{ color }}>{item.riskScore}</span>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
+        
+        {/* Scans + Notifications Tab Card */}
+        <div className="lg:col-span-2">
+          <div className="rounded-2xl border border-[rgba(236,154,163,0.07)] bg-[#0D0D14]/80 backdrop-blur-sm p-5 hover:border-[rgba(236,154,163,0.13)] transition-colors duration-200">
+            <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setActiveTab("scans")}
+                  className={`text-[10px] font-bold uppercase tracking-widest pb-1 transition-all ${
+                    activeTab === "scans"
+                      ? "text-[#EC9AA3] border-b border-[#EC9AA3]"
+                      : "text-[#B6B8C4]/50 hover:text-[#B6B8C4]"
+                  }`}
+                >
+                  Recent Scans
+                </button>
+                <button
+                  onClick={() => setActiveTab("notifications")}
+                  className={`text-[10px] font-bold uppercase tracking-widest pb-1 transition-all flex items-center gap-1.5 ${
+                    activeTab === "notifications"
+                      ? "text-[#EC9AA3] border-b border-[#EC9AA3]"
+                      : "text-[#B6B8C4]/50 hover:text-[#B6B8C4]"
+                  }`}
+                >
+                  Notifications
+                  {notifications?.unreadCount ? (
+                    <span className="px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-[#EC9AA3]/10 text-[#EC9AA3]">
+                      {notifications.unreadCount}
+                    </span>
+                  ) : null}
+                </button>
               </div>
-            ) : (
-              <EmptyState icon="🔍" message="No scans yet" hint="Run your first scan to see results here." cta={{ label: "Scan now", href: "/scan" }} />
-            )}
-          </GlassCard>
-        </motion.div>
+              {activeTab === "scans" ? (
+                <Link href="/threats" className="text-[9px] text-[#EC9AA3]/70 hover:text-[#EC9AA3] transition-colors uppercase tracking-wider">
+                  View all →
+                </Link>
+              ) : null}
+            </div>
 
-        {/* Notifications — 1/3 width */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.25, ease }}>
-          <GlassCard
-            title="Notifications"
-            icon={<BellIcon />}
-            badge={notifications?.unreadCount ? String(notifications.unreadCount) : undefined}
-          >
-            {loading ? <SkeletonRows n={4} /> : notifications && notifications.items.length > 0 ? (
-              <div className="space-y-1.5 max-h-[272px] overflow-y-auto pr-0.5 scrollbar-thin">
-                {notifications.items.map((n, i) => (
-                  <motion.div key={n.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
-                    className={`flex gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150 ${!n.isRead ? "bg-[rgba(236,154,163,0.04)] border border-[rgba(236,154,163,0.08)]" : "hover:bg-[#12121A]/40"}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${n.severity === "critical" ? "bg-red-400" : n.severity === "warning" ? "bg-amber-400" : "bg-blue-400"}`} />
-                    <div className="min-w-0">
-                      <p className={`text-[11px] font-medium truncate ${!n.isRead ? "text-[#F8F8FA]" : "text-[#B6B8C4]"}`}>{n.title}</p>
-                      <p className="text-[9px] text-[#B6B8C4]/50 mt-0.5 truncate">{n.message}</p>
+            <AnimatePresence mode="wait">
+              {activeTab === "scans" ? (
+                <motion.div
+                  key="scans-tab"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  {loading ? <SkeletonRows n={5} /> : history.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {history.slice(0, 6).map((item, i) => {
+                        const color = riskColor[item.riskLevel] || "#B6B8C4";
+                        const isCritical = item.riskScore >= 95;
+                        return (
+                          <motion.div 
+                            key={item.id} 
+                            initial={{ opacity: 0, x: -8 }} 
+                            animate={{ opacity: 1, x: 0 }} 
+                            transition={{ duration: 0.25, delay: i * 0.03, ease }}
+                          >
+                            <Link href="/scan/analysis"
+                              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[rgba(236,154,163,0.03)] border transition-all duration-150 group ${
+                                isCritical 
+                                  ? "border-l-4 border-l-red-500 border-t-transparent border-r-transparent border-b-transparent bg-red-500/5 shadow-[0_0_12px_rgba(239,68,68,0.08)]"
+                                  : "border-transparent"
+                              }`}
+                            >
+                              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                                style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
+                                {scanTypeIcon[item.scanType] || "🔍"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-[#F8F8FA] truncate group-hover:text-[#EC9AA3] transition-colors">{item.content || item.scanType}</p>
+                                <p className="text-[9px] text-[#B6B8C4]/50 mt-0.5 uppercase tracking-wider">{item.scanType} · {new Date(item.timestamp).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="px-2 py-0.5 rounded-full text-[9px] font-bold" style={{ background: `${color}18`, color }}>{riskLabel[item.riskLevel] || item.riskLevel}</div>
+                                <span className="text-sm font-bold tabular-nums" style={{ color }}>{item.riskScore}</span>
+                              </div>
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState icon="🔔" message="All clear" hint="No new notifications." />
-            )}
-          </GlassCard>
-        </motion.div>
-      </div>
+                  ) : (
+                    <EmptyState icon="🔍" message="No scans yet" hint="Run your first scan to see results here." cta={{ label: "Scan now", href: "/scan" }} />
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="notifs-tab"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  {loading ? <SkeletonRows n={4} /> : notifications && notifications.items.length > 0 ? (
+                    <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-0.5 scrollbar-thin">
+                      {notifications.items.map((n, i) => (
+                        <motion.div key={n.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                          className={`flex gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150 ${!n.isRead ? "bg-[rgba(236,154,163,0.04)] border border-[rgba(236,154,163,0.08)]" : "hover:bg-[#12121A]/40"}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${n.severity === "critical" ? "bg-red-400" : n.severity === "warning" ? "bg-amber-400" : "bg-blue-400"}`} />
+                          <div className="min-w-0">
+                            <p className={`text-[11px] font-medium truncate ${!n.isRead ? "text-[#F8F8FA]" : "text-[#B6B8C4]"}`}>{n.title}</p>
+                            <p className="text-[9px] text-[#B6B8C4]/50 mt-0.5 truncate">{n.message}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState icon="🔔" message="All clear" hint="No new notifications." />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
-      {/* ── BOTTOM ROW ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        {/* Activity Chart */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3, ease }}>
-          <GlassCard title="7-Day Activity" icon={<TimelineIcon />}>
-            {loading ? <div className="h-28 rounded-lg bg-[rgba(236,154,163,0.03)] animate-pulse" /> : timeline.length > 0 ? (
-              <ActivityChart timeline={timeline} />
-            ) : (
-              <EmptyState icon="📊" message="No activity yet" hint="Activity will appear after your first scan." />
-            )}
-          </GlassCard>
-        </motion.div>
-
-        {/* AI Insights */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.35, ease }}>
+        {/* AI Insights Card */}
+        <div className="lg:col-span-1">
           <GlassCard title="AEGIS Insights" icon={<BrainIcon />}
             badge={insights ? "AI" : undefined}
             action={<Link href="/aegis" className="text-[9px] text-[#EC9AA3]/70 hover:text-[#EC9AA3] transition-colors uppercase tracking-wider">Ask AEGIS →</Link>}
@@ -219,7 +331,7 @@ export default function CitizenDashboard() {
               <div className="space-y-4">
                 <p className="text-xs text-[#B6B8C4] leading-relaxed">{insights.summary}</p>
                 <div className="space-y-2">
-                  {insights.recommendations.map((r, i) => (
+                  {insights.recommendations.slice(0, 3).map((r, i) => (
                     <div key={i} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[rgba(236,154,163,0.03)] border border-[rgba(236,154,163,0.05)]">
                       <div className="w-1 h-1 rounded-full bg-[#EC9AA3]/60 mt-1.5 flex-shrink-0" />
                       <span className="text-[10px] text-[#B6B8C4] leading-relaxed">{r}</span>
@@ -231,8 +343,19 @@ export default function CitizenDashboard() {
               <EmptyState icon="🤖" message="No insights yet" hint="Run scans to get AI-powered recommendations." />
             )}
           </GlassCard>
-        </motion.div>
+        </div>
       </div>
+
+      {/* ── BOTTOM ROW (Activity Chart only) ────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3, ease }}>
+        <GlassCard title="7-Day Activity" icon={<TimelineIcon />}>
+          {loading ? <div className="h-28 rounded-lg bg-[rgba(236,154,163,0.03)] animate-pulse" /> : timeline.length > 0 ? (
+            <ActivityChart timeline={timeline} />
+          ) : (
+            <EmptyState icon="📊" message="No activity yet" hint="Activity will appear after your first scan." />
+          )}
+        </GlassCard>
+      </motion.div>
     </div>
   );
 }
@@ -242,7 +365,6 @@ export default function CitizenDashboard() {
 function ScoreRingPremium({ score, color, label }: { score: number; color: string; label: string }) {
   const r = 52;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
   return (
     <div className="relative w-36 h-36 flex-shrink-0">
       {/* Outer glow */}
@@ -251,14 +373,22 @@ function ScoreRingPremium({ score, color, label }: { score: number; color: strin
         {/* Track */}
         <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(236,154,163,0.06)" strokeWidth="7" />
         {/* Glow ring */}
-        <circle cx="60" cy="60" r={r} fill="none" strokeWidth="11" strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={offset}
-          style={{ stroke: color, opacity: 0.18, transition: "stroke-dashoffset 1.2s ease-out", filter: `drop-shadow(0 0 8px ${color})` }}
+        <motion.circle 
+          cx="60" cy="60" r={r} fill="none" strokeWidth="11" strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ - (score / 100) * circ }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          style={{ stroke: color, opacity: 0.18, filter: `drop-shadow(0 0 8px ${color})` }}
         />
         {/* Main ring */}
-        <circle cx="60" cy="60" r={r} fill="none" strokeWidth="7" strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={offset}
-          style={{ stroke: color, transition: "stroke-dashoffset 1.2s ease-out" }}
+        <motion.circle 
+          cx="60" cy="60" r={r} fill="none" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ - (score / 100) * circ }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          style={{ stroke: color }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
@@ -274,11 +404,11 @@ function ActivityChart({ timeline }: { timeline: Array<{ date: string; scans: nu
   return (
     <div className="space-y-3">
       <div className="flex items-end gap-1.5 h-24">
-        {timeline.map((point, i) => {
+        {timeline.map((point, pointIdx) => {
           const pct = Math.max(8, (point.scans / maxScans) * 100);
           const hasThreat = point.threats > 0;
           return (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+            <div key={pointIdx} className="flex-1 flex flex-col items-center gap-1 group relative">
               <div className="w-full rounded-t-md transition-all duration-300 group-hover:opacity-100 opacity-90"
                 style={{ height: `${pct}%`, background: hasThreat ? `linear-gradient(to top, #fb923c, #fb923c80)` : `linear-gradient(to top, rgba(236,154,163,0.7), rgba(236,154,163,0.2))` }} />
               {/* Tooltip */}
@@ -291,8 +421,8 @@ function ActivityChart({ timeline }: { timeline: Array<{ date: string; scans: nu
         })}
       </div>
       <div className="flex justify-between">
-        {timeline.map((point, i) => (
-          <span key={i} className="flex-1 text-center text-[8px] text-[#B6B8C4]/40">{point.date.slice(5)}</span>
+        {timeline.map((point, pointIdx) => (
+          <span key={pointIdx} className="flex-1 text-center text-[8px] text-[#B6B8C4]/40">{point.date.slice(5)}</span>
         ))}
       </div>
       <div className="flex items-center gap-4 pt-1">

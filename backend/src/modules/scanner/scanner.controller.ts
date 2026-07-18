@@ -88,4 +88,58 @@ export const scannerController = {
       sendSuccess(res, result);
     } catch (err) { next(err); }
   },
+
+  async uploadAndDecodeQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "UNSUPPORTED_FORMAT", message: "No image file uploaded." });
+      }
+
+      const mimeType = req.file.mimetype;
+      if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(mimeType)) {
+        return res.status(400).json({ success: false, error: "UNSUPPORTED_FORMAT", message: "Only PNG, JPEG, JPG, and WEBP images are supported." });
+      }
+
+      const { preprocessImage } = await import("../../utils/imagePreprocess.util.js");
+      const { data, width, height } = await preprocessImage(req.file.buffer);
+
+      const { decodeQrImage } = await import("../../services/qrDecoder.service.js");
+      const result = await decodeQrImage(data, width, height);
+
+      if (!result.success) {
+        return res.status(400).json({ success: false, error: result.error || "UNREADABLE", message: "We couldn't find a QR code in this image." });
+      }
+
+      sendSuccess(res, { decodedContent: result.decodedContent });
+    } catch (err: any) {
+      next(err);
+    }
+  },
+
+  async classifyQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { decodedContent } = req.body;
+      if (!decodedContent) {
+        return res.status(400).json({ success: false, error: "BAD_REQUEST", message: "decodedContent is required." });
+      }
+
+      const { classifyQrContent } = await import("../../services/qrClassifier.service.js");
+      const classification = classifyQrContent(decodedContent);
+      sendSuccess(res, classification);
+    } catch (err) { next(err); }
+  },
+
+  async analyzeQrParsed(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = (req as AuthenticatedRequest).user!;
+      const { decodedContent } = req.body;
+      if (!decodedContent) {
+        return res.status(400).json({ success: false, error: "BAD_REQUEST", message: "decodedContent is required." });
+      }
+
+      const { routeAndAnalyzeQr } = await import("../../services/qrRouter.service.js");
+      const report = await routeAndAnalyzeQr(user.id, decodedContent);
+      sendSuccess(res, report);
+    } catch (err) { next(err); }
+  },
 };

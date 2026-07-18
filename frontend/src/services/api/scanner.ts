@@ -142,4 +142,37 @@ export const scannerApi = {
 
   getHistory: () =>
     get<HistoryItem[]>("/analyze/history"),
+
+  async uploadQrImage(file: File): Promise<{ decodedContent: string }> {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append("qrImage", file);
+
+    const res = await fetch(`${BASE}/analyze/qr/upload`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+      body: formData,
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || json.error || "Upload failed");
+    return json.data;
+  },
+
+  classifyQrContent(decodedContent: string) {
+    return post<{ contentType: string; confidence: "high" | "medium" | "low"; parsedFields: any }>(
+      "/analyze/qr/classify",
+      { decodedContent }
+    );
+  },
+
+  analyzeQrParsed(decodedContent: string) {
+    return post<any>(
+      "/analyze/qr/analyze",
+      { decodedContent }
+    );
+  },
 };

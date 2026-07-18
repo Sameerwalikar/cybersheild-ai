@@ -1,8 +1,10 @@
 import { app } from "./app.js";
 import { env, connectDatabase, disconnectDatabase } from "./config/index.js";
+import { initAI } from "./modules/ai/index.js";
 
 async function main() {
   await connectDatabase();
+  await initAI();
 
   const server = app.listen(env.PORT, () => {
     console.log(`🚀 CyberShield API running on port ${env.PORT}`);

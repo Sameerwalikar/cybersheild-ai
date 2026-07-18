@@ -16,6 +16,11 @@ const envSchema = z.object({
 
   // ── AI Provider ──────────────────────────────────────────────────
   AI_PROVIDER: z.string().default("mock"),
+  AI_PREFERRED_MODEL: z.string().default("gemini-1.5-flash"),
+  AI_FALLBACK_MODELS: z.string().default("gemini-1.5-pro,gemini-2.0-flash-exp"),
+  AI_TEMPERATURE: z.coerce.number().default(0.2),
+  AI_TOP_P: z.coerce.number().default(0.8),
+  AI_MAX_OUTPUT_TOKENS: z.coerce.number().default(1024),
 
   // Gemini
   GEMINI_API_KEY: z.string().optional(),

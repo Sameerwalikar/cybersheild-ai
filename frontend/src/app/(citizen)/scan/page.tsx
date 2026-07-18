@@ -35,23 +35,49 @@ export default function ScannerHub() {
         animate="visible"
         variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06 } } }}
       >
-        {scanTypes.map((type) => (
-          <motion.div
-            key={type.id}
-            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease } } }}
-          >
-            <Link
-              href={type.href}
-              className="block p-5 rounded-xl bg-[#0D0D12]/80 border border-[rgba(236,154,163,0.08)] hover:border-[rgba(236,154,163,0.2)] hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(0,0,0,0.2)] active:scale-[0.98] transition-all duration-200 group"
+        {scanTypes.map((type) => {
+          const isUpi = type.id === "upi";
+          
+          if (isUpi) {
+            return (
+              <motion.div
+                key={type.id}
+                variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease } } }}
+              >
+                <div
+                  className="block p-5 rounded-xl bg-[#0D0D12]/40 border border-[rgba(255,255,255,0.03)] cursor-not-allowed transition-all duration-200 relative overflow-hidden"
+                >
+                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-[#B6B8C4]/60 uppercase tracking-wider">
+                    Available Soon
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-[#12121A]/50 border border-[rgba(255,255,255,0.05)] flex items-center justify-center mb-4 text-[#B6B8C4]/30">
+                    {type.icon}
+                  </div>
+                  <h3 className="text-sm font-semibold text-[#B6B8C4]/50 mb-1">{type.title}</h3>
+                  <p className="text-[11px] text-[#B6B8C4]/35 leading-relaxed">{type.description}</p>
+                </div>
+              </motion.div>
+            );
+          }
+
+          return (
+            <motion.div
+              key={type.id}
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease } } }}
             >
-              <div className="w-10 h-10 rounded-xl bg-[#12121A] border border-[rgba(236,154,163,0.1)] flex items-center justify-center mb-4 text-[#EC9AA3]/60 group-hover:text-[#EC9AA3] group-hover:bg-[rgba(236,154,163,0.06)] group-hover:scale-110 transition-all duration-200">
-                {type.icon}
-              </div>
-              <h3 className="text-sm font-semibold text-[#F8F8FA] mb-1">{type.title}</h3>
-              <p className="text-[11px] text-[#B6B8C4] leading-relaxed">{type.description}</p>
-            </Link>
-          </motion.div>
-        ))}
+              <Link
+                href={type.href}
+                className="block p-5 rounded-xl bg-[#0D0D12]/80 border border-[rgba(236,154,163,0.08)] hover:border-[rgba(236,154,163,0.2)] hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(0,0,0,0.2)] active:scale-[0.98] transition-all duration-200 group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#12121A] border border-[rgba(236,154,163,0.1)] flex items-center justify-center mb-4 text-[#EC9AA3]/60 group-hover:text-[#EC9AA3] group-hover:bg-[rgba(236,154,163,0.06)] group-hover:scale-110 transition-all duration-200">
+                  {type.icon}
+                </div>
+                <h3 className="text-sm font-semibold text-[#F8F8FA] mb-1">{type.title}</h3>
+                <p className="text-[11px] text-[#B6B8C4] leading-relaxed">{type.description}</p>
+              </Link>
+            </motion.div>
+          );
+        })}
       </motion.div>
     </div>
   );
