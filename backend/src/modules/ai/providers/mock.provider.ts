@@ -3,6 +3,43 @@ import type { AIProvider, ThreatContext } from "../types.js";
 export class MockProvider implements AIProvider {
   async analyzeText(prompt: string, _systemPrompt?: string): Promise<string> {
     // Return deterministic mock JSON based on prompt content
+    if (prompt.includes("citizenExplanation")) {
+      let verdict = "SAFE";
+      if (prompt.includes("Verdict: LIKELY_MALWARE") || prompt.includes("Verdict: CRITICAL")) {
+        verdict = "LIKELY_MALWARE";
+      } else if (prompt.includes("Verdict: LIKELY_PHISHING") || prompt.includes("Verdict: MALICIOUS")) {
+        verdict = "LIKELY_PHISHING";
+      } else if (prompt.includes("Verdict: LOW_RISK")) {
+        verdict = "LOW_RISK";
+      }
+
+      if (verdict === "LIKELY_MALWARE") {
+        return JSON.stringify({
+          citizenExplanation: "Warning: This URL contains a malicious file download. Do not open or run any files from this site.",
+          policeSummary: "Malware distribution page. File downloads detected. Section 66F IT Act.",
+          technicalExplanation: "Executable payload detection with recent domain registry matched malware delivery pattern."
+        });
+      } else if (verdict === "LIKELY_PHISHING") {
+        return JSON.stringify({
+          citizenExplanation: "Caution: This URL mimics a popular brand to steal your banking details. Do not enter passwords or OTPs.",
+          policeSummary: "Credential harvesting page targeting banking customers. Section 66D IT Act, IPC 420.",
+          technicalExplanation: "Brand impersonation and credential harvesting keywords detected in lexical analysis."
+        });
+      } else if (verdict === "LOW_RISK") {
+        return JSON.stringify({
+          citizenExplanation: "Proceed with caution. Minor concerns were detected on this page.",
+          policeSummary: "Low priority scan with minor risk factors. No immediate action required.",
+          technicalExplanation: "Unregistered domain or minor entropy alerts flagged during scan."
+        });
+      } else {
+        return JSON.stringify({
+          citizenExplanation: "This website appears safe based on current reputation and threat intelligence.",
+          policeSummary: "Clean scan. No threats detected.",
+          technicalExplanation: "No threat indicators, safe domain checks matched."
+        });
+      }
+    }
+
     if (prompt.includes("riskScore")) {
       return JSON.stringify({
         riskScore: 75,

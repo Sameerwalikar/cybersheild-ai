@@ -24,6 +24,7 @@ const policeNav: NavItem[] = [
   { label: "Evidence",       href: "/evidence",          icon: <EvidenceIcon /> },
   { label: "Fraud Network",  href: "/network",           icon: <GraphIcon /> },
   { label: "Threat Map",     href: "/threat-map",        icon: <MapIcon /> },
+  { label: "IP Tracing",      href: "/ip-tracing",        icon: <GlobeIcon /> },
   { label: "Analytics",      href: "/analytics",         icon: <ChartIcon /> },
   { label: "Settings",       href: "/police-settings",   icon: <GearIcon /> },
 ];
@@ -218,4 +219,7 @@ function EvidenceIcon() {
 }
 function MapIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" /><line x1="9" y1="3" x2="9" y2="18" /><line x1="15" y1="6" x2="15" y2="21" /></svg>;
+}
+function GlobeIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>;
 }

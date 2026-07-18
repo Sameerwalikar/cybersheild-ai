@@ -633,3 +633,55 @@ model Message {
   @@index([conversationId, createdAt])
   @@map("messages")
 }
+
+model UPIReputation {
+  id            String   @id @default(uuid())
+  upiId         String   @unique
+  normalizedUpi String
+  riskScore     Int      @default(0)
+  reportCount   Int      @default(0)
+  firstSeen     DateTime @default(now())
+  lastSeen      DateTime @default(now())
+  status        String   @default("CLEAN")
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([normalizedUpi])
+  @@map("upi_reputations")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// IP TRACING (IP-INTELLIGENCE) MODELS
+// ─────────────────────────────────────────────────────────────────────
+
+model IPHistory {
+  id        Int      @id @default(autoincrement())
+  ip        String   @unique
+  firstSeen DateTime @default(now())
+  lastSeen  DateTime @default(now())
+  count     Int      @default(1)
+
+  @@map("ip_history")
+}
+
+model IpLookupAudit {
+  id         Int      @id @default(autoincrement())
+  ip         String
+  lookedUpBy String?  @map("looked_up_by")
+  timestamp  DateTime @default(now())
+  riskScore  Int?     @map("risk_score")
+
+  @@map("ip_lookup_audit")
+}
+
+model IpList {
+  id       Int      @id @default(autoincrement())
+  ip       String
+  listType String   @map("list_type") // 'blocklist' | 'allowlist'
+  addedBy  String?  @map("added_by")
+  addedAt  DateTime @default(now())   @map("added_at")
+  note     String?
+
+  @@map("ip_lists")
+}

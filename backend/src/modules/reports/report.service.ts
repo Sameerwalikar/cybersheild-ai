@@ -4,6 +4,7 @@ import { timelineService } from "../timeline/index.js";
 import { graphService } from "../graph/index.js";
 import { extractEntities } from "../graph/entity-extractor.js";
 import type { CreateReportInput } from "./report.validator.js";
+import { checkAndUpsertUpiFromText } from "../../utils/upiIntelHelper.js";
 
 export const reportService = {
   async create(userId: string, input: CreateReportInput) {
@@ -48,6 +49,13 @@ export const reportService = {
 
     // 6. Scammer profile management (non-blocking)
     this.processScammerProfile(report.id, input).catch(() => {});
+
+    // 6.5. Update UPI reputation if UPI is present in scammerContact or description
+    const calculatedScore = priority === "CRITICAL" ? 85 : priority === "HIGH" ? 75 : 50;
+    if (input.scammerContact?.upiId) {
+      checkAndUpsertUpiFromText(input.scammerContact.upiId, calculatedScore, 1).catch(() => {});
+    }
+    checkAndUpsertUpiFromText(input.description, calculatedScore, 1).catch(() => {});
 
     // 7. Generate AI summary (non-blocking)
     this.generateAISummary(report.id, input).catch(() => {});

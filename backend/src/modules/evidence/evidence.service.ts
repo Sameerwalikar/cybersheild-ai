@@ -5,6 +5,7 @@ import { notificationService } from "../notifications/index.js";
 import { graphService } from "../graph/index.js";
 import { dashboardService } from "../dashboard/dashboard.service.js";
 import { AppError } from "../../utils/AppError.js";
+import { checkAndUpsertUpiFromText } from "../../utils/upiIntelHelper.js";
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "application/pdf"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -95,6 +96,10 @@ export const evidenceService = {
         riskLevel: analysisResult.riskScore >= 80 ? "critical" : analysisResult.riskScore >= 60 ? "high" : analysisResult.riskScore >= 40 ? "medium" : analysisResult.riskScore >= 20 ? "low" : "safe",
       },
     });
+
+    // Extract and upsert UPIs from filename, vision summary, or detected signals
+    const contentToScan = `${input.filename} ${analysisResult.explanation} ${analysisResult.detectedSignals.join(" ")}`;
+    checkAndUpsertUpiFromText(contentToScan, analysisResult.riskScore, 1).catch(() => {});
 
     // Create notification (non-blocking)
     const isHighRisk = analysisResult.riskScore >= 60;

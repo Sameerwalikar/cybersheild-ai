@@ -33,13 +33,13 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
             type={inputType}
             className={`
               w-full ${icon ? "pl-10" : "pl-4"} ${isPassword ? "pr-10" : "pr-4"} py-3 rounded-xl text-sm text-[#F8F8FA]
-              bg-[#0D0D12] border
+              bg-[#0D0D12]/50 backdrop-blur-sm border
               placeholder:text-[#B6B8C4]/40
               focus:outline-none
-              transition-all duration-200
+              transition-all duration-300
               ${error
-                ? "border-red-400/50 focus:border-red-400 focus:shadow-[0_0_0_3px_rgba(248,113,113,0.1)]"
-                : "border-[rgba(236,154,163,0.12)] focus:border-[rgba(236,154,163,0.4)] focus:shadow-[0_0_0_3px_rgba(236,154,163,0.08)]"
+                ? "border-red-400/50 focus:border-red-400 focus:shadow-[0_0_15px_rgba(248,113,113,0.1)]"
+                : "border-[rgba(236,154,163,0.12)] focus:border-[rgba(236,154,163,0.5)] focus:shadow-[0_0_15px_rgba(236,154,163,0.12)]"
               }
               ${className}
             `}

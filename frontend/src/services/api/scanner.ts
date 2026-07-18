@@ -34,29 +34,95 @@ async function get<T>(endpoint: string): Promise<T> {
   return json.data as T;
 }
 
+// ─── Response types ───────────────────────────────────────────────────────────
+
+export interface ScanSignal {
+  label:       string;
+  severity:    string;
+  confidence:  number;
+  description: string;
+}
+
+export interface ScanIntel {
+  /** Lexical analysis — always present for URL scans */
+  lexical: {
+    score:                       number;
+    detectedBrands:              string[];
+    detectedKeywords:            string[];
+    suspiciousTld:               boolean;
+    entropy:                     "LOW" | "MEDIUM" | "HIGH";
+    hyphenCount:                 number;
+    credentialHarvestingPattern: boolean;
+    subdomainDeception:          boolean;
+    punycodeDetected:            boolean;
+    ipAddressUrl:                boolean;
+    reasons:                     string[];
+  } | null;
+  google: {
+    detected:    boolean;
+    threatTypes: string[];
+    available:   boolean;
+  } | null;
+  virusTotal: {
+    maliciousCount:  number;
+    suspiciousCount: number;
+    communityScore:  number;
+    categories:      string[];
+    available:       boolean;
+  } | null;
+  rdap: {
+    domain:           string;
+    registrar:        string | null;
+    ageInDays:        number | null;
+    registrationDate: string | null;
+    isNewDomain:      boolean;
+    isVeryNewDomain:  boolean;
+    available:        boolean;
+  } | null;
+  engineReasons: string[];
+}
+
+export interface ScanAI {
+  explanation:     string;
+  category:        string;
+  citizenAdvice:   string;
+  policeSummary?:  string;
+  recommendations: string[];
+  aiSummary:       string;
+}
+
 export interface ScanResult {
-  id: string;
-  scanId: string;
-  scanType: string;
-  riskScore: number;
-  riskLevel: string;
-  confidence: number;
-  summary: string;
-  recommendation: string;
-  signals: { label: string; severity: string; confidence: number; description: string }[];
-  processingTime: number;
-  timestamp: string;
+  id:              string;
+  scanId:          string;
+  scanType:        string;
+  riskScore:       number;
+  riskLevel:       string;
+  confidence:      number;
+  summary:         string;
+  recommendation:  string;
+  signals:         ScanSignal[];
+  processingTime:  number;
+  timestamp:       string;
+  /** AI enrichment — present when Gemini/NVIDIA responded successfully */
+  ai?:    ScanAI | null;
+  /** Threat intelligence — present for URL scans only */
+  intel?: ScanIntel | null;
+  verdict?: string;
+  headline?: string;
+  metadata?: any;
 }
 
 export interface HistoryItem {
-  id: string;
-  scanType: string;
-  content: string;
+  id:        string;
+  scanType:  string;
+  content:   string;
   riskScore: number;
   riskLevel: string;
   timestamp: string;
-  status: string;
+  status:    string;
 }
+
+// ─── API calls (unchanged shape — backward compatible) ───────────────────────
 
 export const scannerApi = {
   scanMessage: (content: string, metadata?: { sender?: string; source?: string }) =>

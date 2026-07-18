@@ -1,18 +1,22 @@
-interface Signal {
+export interface Signal {
   label: string;
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   confidence: number;
   description: string;
 }
 
-interface AnalysisResult {
+export interface AnalysisResult {
   riskScore: number;
   riskLevel: "SAFE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   confidence: number;
   signals: Signal[];
   summary: string;
   recommendation: string;
+  processingTime?: number;
+  metadata?: any;
 }
+
+import { analyzeUpiDetailed } from "../../services/threat-intelligence/upi/upiThreatEngine.js";
 
 // ─── MESSAGE ANALYSIS ─────────────────────────────────────────────────
 
@@ -98,9 +102,9 @@ export function analyzeUrl(url: string): AnalysisResult {
 
 // ─── QR ANALYSIS ──────────────────────────────────────────────────────
 
-export function analyzeQr(content: string, type: string): AnalysisResult {
+export async function analyzeQr(content: string, type: string): Promise<AnalysisResult> {
   if (type === "url") return analyzeUrl(content);
-  if (type === "upi") return analyzeUpi(content);
+  if (type === "upi") return await analyzeUpi(content);
 
   const signals: Signal[] = [];
   let score = 0;
@@ -116,38 +120,8 @@ export function analyzeQr(content: string, type: string): AnalysisResult {
 
 // ─── UPI ANALYSIS ─────────────────────────────────────────────────────
 
-const knownFraudPatterns = /\b(paytm.*official|verify.*pay|refund|cashback|reward)\b/i;
-const suspiciousUpiHandles = /(unknown|fraud|scam|hack|free|lucky|winner)/i;
-
-export function analyzeUpi(upiId: string): AnalysisResult {
-  const signals: Signal[] = [];
-  let score = 0;
-
-  const handle = upiId.split("@")[0] || "";
-  const provider = upiId.split("@")[1] || "";
-
-  if (suspiciousUpiHandles.test(handle)) {
-    signals.push({ label: "Suspicious Handle", severity: "HIGH", confidence: 0.82, description: "UPI handle contains keywords associated with fraud." });
-    score += 30;
-  }
-  if (knownFraudPatterns.test(handle)) {
-    signals.push({ label: "Fraud Pattern Match", severity: "HIGH", confidence: 0.88, description: "Handle matches known fraud naming patterns." });
-    score += 25;
-  }
-  if (handle.length > 20) {
-    signals.push({ label: "Unusual Length", severity: "LOW", confidence: 0.6, description: "Unusually long UPI handle." });
-    score += 8;
-  }
-  if (!["ybl", "paytm", "okhdfcbank", "okaxis", "oksbi", "ibl", "apl", "upi"].includes(provider.toLowerCase())) {
-    signals.push({ label: "Uncommon Provider", severity: "MEDIUM", confidence: 0.7, description: "UPI provider is less common — verify before transacting." });
-    score += 12;
-  }
-
-  if (signals.length === 0) {
-    signals.push({ label: "UPI Appears Valid", severity: "LOW", confidence: 0.85, description: "No fraud indicators detected for this UPI ID." });
-  }
-
-  return buildResult(score, signals, "upi");
+export async function analyzeUpi(upiId: string): Promise<AnalysisResult> {
+  return await analyzeUpiDetailed(upiId);
 }
 
 // ─── VOICE ANALYSIS ───────────────────────────────────────────────────

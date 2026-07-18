@@ -167,4 +167,9 @@ export const policeApi = {
   getReportStats: () => get<any>("/reports/police/stats"),
   getScammerProfiles: (page = 1) => get<any>(`/reports/police/scammers?page=${page}`),
   getTopEntities: () => get<any>("/reports/police/top-entities"),
+
+  // IP Tracing endpoints
+  getIpRiskProfile: (ip: string, bypassCache = false) => get<any>(`/police/ip-trace/${ip}${bypassCache ? "?bypassCache=true" : ""}`),
+  addIpToList: (ip: string, listType: string, note?: string) => post<any>(`/police/ip-trace/${ip}/list`, { list_type: listType, note }),
+  getIpQuotas: () => get<any>("/police/ip-trace/quotas"),
 };

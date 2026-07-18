@@ -1,0 +1,13 @@
+{
+  "max_score": 100,
+  "weights": {
+    "tor_exit": 80,
+    "vpn": 30,
+    "proxy": 40,
+    "hosting_provider": 20,
+    "abuseipdb_score_multiplier": 0.5,
+    "greynoise_malicious": 80,
+    "internal_telemetry_threshold": 3,
+    "internal_telemetry_penalty": 20
+  }
+}

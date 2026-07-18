@@ -1,0 +1,8 @@
+{
+  "hosting": [
+    "digitalocean", "amazon", "google", "ovh", "hetzner", "linode", "akamai", "cloudflare", "fastly", "azure", "datacenter", "hosting", "aws"
+  ],
+  "isp": [
+    "comcast", "at&t", "verizon", "spectrum", "centurylink", "vodafone", "telecom", "isp"
+  ]
+}

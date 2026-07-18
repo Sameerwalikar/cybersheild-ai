@@ -62,11 +62,23 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <>
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-[#F8F8FA]">Reset password</h2>
-                <p className="mt-1 text-sm text-[#B6B8C4]">
-                  Enter your email and we&apos;ll send you a reset link.
-                </p>
+              <div className="mb-8 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[rgba(236,154,163,0.06)] border border-[rgba(236,154,163,0.12)]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#EC9AA3]" />
+                    <span className="text-[10px] font-bold text-[#EC9AA3] uppercase tracking-wider">{role}</span>
+                  </div>
+                  
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-pink-500/20 bg-pink-500/5 text-[9px] font-extrabold uppercase tracking-widest text-[#EC9AA3] animate-pulse">
+                    <span className="w-1 h-1 rounded-full bg-[#EC9AA3]" />
+                    Encrypted Session
+                  </span>
+                </div>
+                
+                <div className="space-y-1 pt-1">
+                  <h2 className="text-2xl font-bold text-[#F8F8FA] tracking-tight">Reset password</h2>
+                  <p className="text-sm text-[#B6B8C4] font-medium opacity-90">Enter your email and we&apos;ll send you a reset link.</p>
+                </div>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
@@ -83,7 +95,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl font-semibold text-sm text-[#050508] bg-[#EC9AA3] shadow-[0_2px_12px_rgba(236,154,163,0.2)] hover:shadow-[0_6px_20px_rgba(236,154,163,0.25)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none transition-all duration-200 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl font-bold text-sm text-[#050508] bg-gradient-to-r from-[#EC9AA3] to-[#F3B3BA] shadow-[0_4px_20px_rgba(236,154,163,0.25)] hover:shadow-[0_6px_24px_rgba(236,154,163,0.4)] hover:scale-[1.015] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   {loading && (
                     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -96,7 +108,7 @@ export default function ForgotPasswordPage() {
               </form>
 
               <p className="mt-6 text-center text-xs text-[#B6B8C4]">
-                <Link href={`/login?role=${role}`} className="text-[#EC9AA3] hover:text-[#F3B3BA] font-medium transition-colors">
+                <Link href={`/login?role=${role}`} className="text-[#EC9AA3] hover:text-[#F3B3BA] font-medium border-b border-transparent hover:border-[#EC9AA3]/40 pb-0.5 transition-all duration-200">
                   ← Back to sign in
                 </Link>
               </p>

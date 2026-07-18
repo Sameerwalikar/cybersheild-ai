@@ -1,27 +1,25 @@
 import { aegisRepository } from "./aegis.repository.js";
 import { getAIProvider } from "../ai/ai.provider.js";
+import { aiConfig } from "../../config/ai.config.js";
 
-const SYSTEM_PROMPT = `You are AEGIS, the AI cybersecurity assistant for CyberShield AI — India's digital public safety platform.
+const SYSTEM_PROMPT = `You are AEGIS, the AI cybersecurity assistant and analyst for CyberShield AI — India's digital public safety platform.
 
 Your role:
-- Help citizens understand cyber threats
-- Explain scan results in simple language
-- Provide actionable security advice
-- Answer cybersecurity questions
-- Summarize the user's recent threat activity
-- Explain report statuses and investigation progress
-- Identify patterns in reported scams
+- Help citizens understand cyber threats, including phishing, malware, ransomware, fake websites, social engineering, and financial frauds.
+- Explain scan results (URLs, UPI IDs, SMS messages, voice calls, QR codes) in simple, clean, non-technical language.
+- Provide actionable, clear security advice and emergency incident response guidance (e.g., dialing 1930 for financial scams, blocking numbers, reporting to cybercrime.gov.in).
+- Answer general and specific cybersecurity questions.
+- Summarize the user's recent threat activity based on their scan history.
+- Explain report statuses and case investigation progress for citizens and police officers.
+- Help law enforcement/police officers navigate investigation contexts, reference legal sections (e.g., Section 66D of the IT Act, IPC 420 for cheating), and identify pattern indicators.
 
 Rules:
-- Only answer cybersecurity-related questions
-- If asked unrelated topics, politely redirect: "I'm specialized in cybersecurity. How can I help you stay safe online?"
-- Use simple language, avoid jargon
-- Be helpful, reassuring, and factual
-- Reference the user's actual scan history and reports when available
-- Never invent or fabricate scan data
-- Use Indian context (UPI, Aadhaar, SBI, etc.) when relevant
-- When asked about reports or investigations, summarize from the provided context
-- You can identify repeat scammers and linked reports from the context`;
+- Ground your answers strictly in cybersecurity, online safety, and digital protection.
+- If asked about unrelated general topics (like cooking, sports, etc.), politely redirect: "I am AEGIS, your cybersecurity specialist. How can I help you stay safe online?"
+- Use simple, reassuring, and factual language. Avoid overwhelming technical jargon unless specifically asked.
+- Reference the user's actual scan history and reports from the provided context whenever available, but never fabricate details.
+- Use Indian contexts (UPI handles, Aadhaar deception, SBI/banking impersonations, government entities) when relevant.
+- You can identify repeat scammers and linked reports from the context.`;
 
 export const aegisService = {
   async getConversations(userId: string) {
@@ -65,9 +63,13 @@ export const aegisService = {
 
     // Build context string
     const contextParts: string[] = [];
-    if (recentScans.length > 0) {
+    // Slice context arrays using configuration parameters
+    const scansSlice = recentScans.slice(0, aiConfig.aegis.maxRecentScans);
+    const reportsSlice = recentReports.slice(0, aiConfig.aegis.maxRecentReports);
+
+    if (scansSlice.length > 0) {
       contextParts.push("USER'S RECENT SCANS:");
-      recentScans.forEach((s) => {
+      scansSlice.forEach((s) => {
         contextParts.push(`- ${s.scanType} scan (Risk: ${s.analysis?.riskScore || 0}/100, Level: ${s.analysis?.riskLevel || "SAFE"}): "${s.content.slice(0, 80)}"`);
       });
     }
@@ -77,16 +79,16 @@ export const aegisService = {
         contextParts.push(`- [${n.severity}] ${n.title}: ${n.message}`);
       });
     }
-    if (recentReports.length > 0) {
+    if (reportsSlice.length > 0) {
       contextParts.push("\nUSER'S RECENT REPORTS:");
-      recentReports.forEach((r) => {
+      reportsSlice.forEach((r) => {
         contextParts.push(`- ${r.reportNumber} (${r.type}, Status: ${r.status}): "${r.description.slice(0, 80)}"`);
       });
     }
 
-    // Get conversation history (last 10 messages for context window)
+    // Get conversation history (slice size determined by config)
     const convo = await aegisRepository.getConversation(convoId, userId);
-    const history = (convo?.messages || []).slice(-10).map((m) => ({
+    const history = (convo?.messages || []).slice(-aiConfig.aegis.maxContextMessages).map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     }));
@@ -108,7 +110,7 @@ export const aegisService = {
       }
     } catch (err: any) {
       console.error("AEGIS AI call failed:", err.message || err);
-      response = "I'm having trouble connecting to my intelligence systems right now. Please try again in a moment.";
+      response = "I'm temporarily unable to access my AI reasoning engine. Threat scanning services remain available.";
     }
 
     // Save assistant response
@@ -116,14 +118,28 @@ export const aegisService = {
 
     // Auto-title on first exchange
     if (!conversationId) {
-      const title = message.length > 40 ? message.slice(0, 37) + "..." : message;
+      let title = "New Chat";
+      try {
+        const titlePrompt = `Summarize this user question into a very short, clean conversation title (max 4 words, no punctuation or quotes):\n"${message}"`;
+        const generatedTitle = await provider.analyzeText(titlePrompt, "You are a concise coordinator. Reply with ONLY the title.");
+        if (generatedTitle && generatedTitle.trim().length > 0 && !generatedTitle.includes("unable to access") && !generatedTitle.includes("temporarily unable")) {
+          title = generatedTitle.replace(/["']/g, "").trim();
+        } else {
+          title = message.length > 30 ? message.slice(0, 27) + "..." : message;
+        }
+      } catch {
+        title = message.length > 30 ? message.slice(0, 27) + "..." : message;
+      }
       await aegisRepository.updateConversation(convoId, userId, { title });
     }
 
-    return {
+    console.log(`[AI Tracing] Saved Conversation ID: ${convoId}`);
+    const dto = {
       conversationId: convoId,
       message: { role: "assistant", content: response, timestamp: new Date().toISOString() },
     };
+    console.log(`[AI Tracing] Returned DTO: ${JSON.stringify(dto)}`);
+    return dto;
   },
 
   async deleteConversation(id: string, userId: string) {

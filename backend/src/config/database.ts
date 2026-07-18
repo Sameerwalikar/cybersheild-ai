@@ -4,7 +4,6 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefi
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  datasourceUrl: process.env.DATABASE_URL,
 });
 
 if (process.env.NODE_ENV !== "production") {
@@ -13,10 +12,14 @@ if (process.env.NODE_ENV !== "production") {
 
 export async function connectDatabase(): Promise<void> {
   try {
-    await prisma.$connect();
-    // Verify connection with a simple query
+    // Do NOT call prisma.$connect() explicitly — Prisma connects lazily.
+    // Calling $connect() before a query on a PgBouncer (transaction-mode) connection
+    // can cause "prepared statement already exists" errors on hot reload because the
+    // pooler reuses server connections across process restarts.
+    //
+    // Instead, issue a single lightweight query to verify the connection is reachable.
     await prisma.$queryRaw`SELECT 1`;
-    console.log("✅ Database connected (Neon PostgreSQL)");
+    console.log("✅ Database connected (Supabase PostgreSQL)");
   } catch (error: any) {
     console.error("❌ Database connection failed:");
     if (error.message?.includes("ENOTFOUND") || error.message?.includes("ECONNREFUSED")) {
