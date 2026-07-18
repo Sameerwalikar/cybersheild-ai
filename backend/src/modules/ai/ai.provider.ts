@@ -58,16 +58,22 @@ export async function initAI(): Promise<void> {
 
       const activeModel = ModelDiscoveryService.getInstance().getActiveModel();
 
-      const startTest = Date.now();
-      // Perform ONE lightweight AI capability test
-      await p.analyzeText("test");
-      const latency = Date.now() - startTest;
+      const shouldRunSelfTest = aiConfig.startupSelfTest && process.env.NODE_ENV !== "development";
 
-      console.log("✓ AI Provider Connected");
-      console.log("✓ Authentication Successful");
-      console.log(`✓ Model Verified (${activeModel})`);
-      console.log("✓ AI Ready");
-      console.log(`📊 Average Latency: ${latency}ms`);
+      if (shouldRunSelfTest) {
+        console.log("⚡ Running AI capability self-test...");
+        const startTest = Date.now();
+        await p.analyzeText("test");
+        const latency = Date.now() - startTest;
+
+        console.log("✓ AI Provider Connected");
+        console.log("✓ Authentication Successful");
+        console.log(`✓ Model Verified (${activeModel})`);
+        console.log("✓ AI Ready");
+        console.log(`📊 Average Latency: ${latency}ms`);
+      } else {
+        console.log(`✓ AI Ready (Self-test skipped, active model: ${activeModel})`);
+      }
     } catch (err: any) {
       console.error(`❌ AI startup self-test failed: ${err.message}`);
       aiConfig.isDegraded = true;

@@ -120,8 +120,8 @@ export async function analyzeQr(content: string, type: string): Promise<Analysis
 
 // ─── UPI ANALYSIS ─────────────────────────────────────────────────────
 
-export async function analyzeUpi(upiId: string): Promise<AnalysisResult> {
-  return await analyzeUpiDetailed(upiId);
+export async function analyzeUpi(upiId: string, metadata?: any): Promise<AnalysisResult> {
+  return await analyzeUpiDetailed(upiId, metadata);
 }
 
 // ─── VOICE ANALYSIS ───────────────────────────────────────────────────

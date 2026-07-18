@@ -1,94 +1,133 @@
-import { useState, useCallback } from "react";
-import { scannerApi } from "@/services/api/scanner";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { scannerApi, type ScanResult } from "@/services/api/scanner";
 
-export type PipelineStage = "idle" | "uploading" | "classifying" | "confirming" | "analyzing" | "success" | "error";
+export type PipelineStage = "idle" | "loading" | "success" | "error";
+
+export const SCAN_STEPS = [
+  "Uploading QR Image",
+  "Decoding QR Code",
+  "Classifying Payload Type",
+  "Running Security Heuristics",
+  "Calculating Threat Score",
+  "Generating AI Explanation",
+  "Preparing Security Report"
+];
 
 export function useQrScanPipeline() {
   const [stage, setStage] = useState<PipelineStage>("idle");
   const [file, setFile] = useState<File | null>(null);
-  const [decodedContent, setDecodedContent] = useState("");
-  const [contentType, setContentType] = useState("");
-  const [confidence, setConfidence] = useState<"high" | "medium" | "low">("low");
-  const [parsedFields, setParsedFields] = useState<any>(null);
-  const [report, setReport] = useState<any>(null);
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [report, setReport] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [errorStage, setErrorStage] = useState<PipelineStage | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const cacheRef = useRef<{ fileKey: string; report: ScanResult } | null>(null);
+
+  // Clean up any pending requests on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const reset = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     setStage("idle");
     setFile(null);
-    setDecodedContent("");
-    setContentType("");
-    setConfidence("low");
-    setParsedFields(null);
+    setActiveStepIndex(0);
     setReport(null);
     setError(null);
-    setErrorStage(null);
   }, []);
 
   const handleUpload = async (uploadedFile: File) => {
-    setFile(uploadedFile);
-    setStage("uploading");
-    setError(null);
-    setErrorStage(null);
-
-    try {
-      const decodeRes = await scannerApi.uploadQrImage(uploadedFile);
-      setDecodedContent(decodeRes.decodedContent);
-
-      setStage("classifying");
-      const classifyRes = await scannerApi.classifyQrContent(decodeRes.decodedContent);
-      setContentType(classifyRes.contentType);
-      setConfidence(classifyRes.confidence);
-      setParsedFields(classifyRes.parsedFields);
-
-      setStage("confirming");
-    } catch (err: any) {
-      setError(err.message || "An error occurred during decoding.");
-      setErrorStage("uploading");
-      setStage("error");
+    // 1. Cancel previous pending request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
-  };
 
-  const handleAnalyze = async () => {
-    if (!decodedContent) return;
-    setStage("analyzing");
+    const fileKey = `${uploadedFile.name}-${uploadedFile.size}-${uploadedFile.lastModified}`;
+    setFile(uploadedFile);
     setError(null);
-    setErrorStage(null);
+
+    // 2. Check session cache
+    if (cacheRef.current && cacheRef.current.fileKey === fileKey) {
+      setReport(cacheRef.current.report);
+      setStage("success");
+      return;
+    }
+
+    // 3. Start new pipeline
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    setStage("loading");
+    setActiveStepIndex(0);
+
+    // Interval to simulate step progress smoothly
+    let currentIdx = 0;
+    const stepTimer = setInterval(() => {
+      if (currentIdx < SCAN_STEPS.length - 2) {
+        currentIdx += 1;
+        setActiveStepIndex(currentIdx);
+      }
+    }, 450); // Progress step every 450ms
 
     try {
-      const scanReport = await scannerApi.analyzeQrParsed(decodedContent);
+      const scanReport = await scannerApi.uploadQrImage(uploadedFile, controller.signal);
+      clearInterval(stepTimer);
+      setActiveStepIndex(SCAN_STEPS.length - 1); // jump to end
+      
+      // Save in cache
+      cacheRef.current = { fileKey, report: scanReport };
       setReport(scanReport);
       setStage("success");
     } catch (err: any) {
-      setError(err.message || "Threat analysis failed.");
-      setErrorStage("analyzing");
+      clearInterval(stepTimer);
+      if (err.name === "AbortError") {
+        // Ignored since a newer upload aborted this
+        return;
+      }
+      
+      // Map error to clean client messages
+      let displayError = "Please upload an image containing a valid QR code.";
+      if (err.message && (
+        err.message.includes("No QR code") ||
+        err.message.includes("unreadable") ||
+        err.message.includes("corrupted") ||
+        err.message.includes("limit")
+      )) {
+        displayError = err.message;
+      } else if (err.message && err.message.includes("temporary")) {
+        displayError = "Analysis temporarily unavailable.";
+      }
+      
+      setError(displayError);
       setStage("error");
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
   const handleRetry = async () => {
-    if (errorStage === "uploading" && file) {
+    if (file) {
       await handleUpload(file);
-    } else if (errorStage === "analyzing") {
-      await handleAnalyze();
     }
   };
 
   return {
     stage,
     file,
-    decodedContent,
-    contentType,
-    confidence,
-    parsedFields,
+    activeStepIndex,
     report,
     error,
-    errorStage,
     handleUpload,
-    handleAnalyze,
     handleRetry,
     reset,
-    setContentType,
   };
 }

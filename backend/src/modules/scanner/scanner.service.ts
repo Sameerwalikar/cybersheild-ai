@@ -32,7 +32,7 @@ export const scannerService = {
       case "MESSAGE": ruleResult = analyzeMessage(input.content); break;
       case "URL":     ruleResult = analyzeUrl(input.content);     break;
       case "QR":      ruleResult = await analyzeQr(input.content, input.metadata?.originalType || "text"); break;
-      case "UPI":     ruleResult = await analyzeUpi(input.content);     break;
+      case "UPI":     ruleResult = await analyzeUpi(input.content, input.metadata);     break;
       case "VOICE":   ruleResult = analyzeVoice(input.content);   break;
       default:        ruleResult = analyzeMessage(input.content);
     }

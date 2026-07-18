@@ -65,6 +65,12 @@ const envSchema = z.object({
   // Logging
   AI_DEBUG_LOGGING: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(true),
 
+  // Quota & Model selection configuration
+  AI_MODEL_REFRESH_INTERVAL_MINUTES: z.coerce.number().default(60),
+  AI_EXHAUSTED_MODEL_COOLDOWN_MINUTES: z.coerce.number().default(15),
+  AI_STARTUP_SELF_TEST: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(false),
+  AI_ENABLE_MODEL_DISCOVERY: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(true),
+
   // ── Threat Intelligence APIs ─────────────────────────────────────
   GOOGLE_SAFE_BROWSING_API_KEY: z.string().optional(),
   VIRUSTOTAL_API_KEY: z.string().optional(),

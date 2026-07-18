@@ -12,6 +12,10 @@ export const aiConfig = {
   retryDelayMs: env.AI_RETRY_DELAY_MS,
   isDegraded: false,
   activeModel: env.AI_PREFERRED_MODEL,
+  modelRefreshIntervalMinutes: env.AI_MODEL_REFRESH_INTERVAL_MINUTES,
+  exhaustedModelCooldownMinutes: env.AI_EXHAUSTED_MODEL_COOLDOWN_MINUTES,
+  startupSelfTest: env.AI_STARTUP_SELF_TEST,
+  enableModelDiscovery: env.AI_ENABLE_MODEL_DISCOVERY,
 
   gemini: {
     apiKey: env.GEMINI_API_KEY || "",

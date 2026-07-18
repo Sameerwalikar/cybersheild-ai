@@ -114,26 +114,32 @@ Type: ${context.scanType}, Risk: ${context.riskScore}/100, Signals: ${context.si
 
   private async callModel(body: object): Promise<string> {
     const discovery = ModelDiscoveryService.getInstance();
-    const active = discovery.getActiveModel();
-    const allModels = [aiConfig.preferredModel, ...aiConfig.fallbackModels];
-    const modelsToTry = Array.from(new Set([active, ...allModels]));
-
+    
+    // Visited models to prevent loops in this request
+    const visitedModels = new Set<string>();
     let lastError: any = null;
+    let fallbackCount = 0;
 
-    for (const currentModel of modelsToTry) {
+    while (true) {
+      const availableModels = discovery.getAvailableModels().filter(m => !visitedModels.has(m));
+      
+      if (availableModels.length === 0) {
+        throw new AIError("MODEL_UNAVAILABLE", "All compatible discovered models failed.");
+      }
+
+      const currentModel = availableModels[0];
+      visitedModels.add(currentModel);
       discovery.setActiveModel(currentModel);
 
-      const keyPrefix = this.apiKey ? this.apiKey.slice(0, 8) : "none";
-      const obfuscatedUrl = `${this.baseUrl}/models/${currentModel}:generateContent?key=${keyPrefix}...`;
-      const url = `${this.baseUrl}/models/${currentModel}:generateContent?key=${this.apiKey}`;
       const maxAttempts = aiConfig.retryCount + 1;
-
-      let triggerFallback = false;
+      let shouldSwitchModel = false;
+      let modelSwitchReason = "";
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
         const startTime = Date.now();
+        const url = `${this.baseUrl}/models/${currentModel}:generateContent?key=${this.apiKey}`;
 
         try {
           const res = await fetch(url, {
@@ -147,68 +153,90 @@ Type: ${context.scanType}, Risk: ${context.riskScore}/100, Signals: ${context.si
           const respText = await res.text().catch(() => "Unable to read response text");
           const latency = Date.now() - startTime;
 
-          if (aiConfig.logging.debugLogging) {
+          if (res.ok) {
+            clearTimeout(timeout);
+            
             console.log(
-              `[AI Tracing] Request ID: ${Math.random().toString(36).substring(7)} | ` +
-              `Provider: gemini | Model: ${currentModel} | Attempt: ${attempt}/${maxAttempts} | ` +
-              `Latency: ${latency}ms | Status: ${status}`
+              `[AI Tracing] Success | Provider: gemini | Preferred Model: ${aiConfig.preferredModel} | ` +
+              `Selected Model: ${currentModel} | Fallback Count: ${fallbackCount} | Latency: ${latency}ms`
             );
+
+            let parsedData: any;
+            try {
+              parsedData = JSON.parse(respText);
+            } catch {
+              throw new AIError("PROVIDER_ERROR", "Failed to parse Gemini response as JSON");
+            }
+
+            const text: string = parsedData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+            
+            if (aiConfig.logging.debugLogging) {
+              console.log("\n=== STAGE 2: COMPLETE RAW GEMINI RESPONSE ===");
+              console.log(JSON.stringify(parsedData, null, 2));
+              console.log("\n=== STAGE 3: RESPONSE PARSING ===");
+              console.log(`assistant.content: ${text}\n`);
+            }
+
+            return text;
           }
-
-          if (!res.ok) {
-            console.error(`[AI Tracing] [API ERROR DETAILED] Status: ${status} | Body: ${respText}`);
-            if (isModelUnavailableError(status, respText)) {
-              triggerFallback = true;
-              lastError = new AIError("MODEL_UNAVAILABLE", `Model ${currentModel} unavailable: ${status}`);
-              clearTimeout(timeout);
-              break; // Break the attempt loop to try next model in fallbacks
-            }
-
-            if (status === 400) {
-              throw new AIError("PROVIDER_ERROR", `Bad request (400) — ${respText.slice(0, 200)}`);
-            }
-            if (status === 401) {
-              throw new AIError("AUTHENTICATION_FAILED", `Unauthorized (401)`);
-            }
-            if (status === 403) {
-              throw new AIError("AUTHORIZATION_FAILED", `Forbidden (403)`);
-            }
-            if (status === 429) {
-              const retryAfter = res.headers.get("retry-after");
-              const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : aiConfig.retryDelayMs;
-              lastError = new AIError("RATE_LIMITED", `Rate limit exceeded (429)`);
-              clearTimeout(timeout);
-              if (attempt < maxAttempts) {
-                await new Promise((resolve) => setTimeout(resolve, delay));
-                continue;
-              }
-              throw lastError;
-            }
-
-            throw new AIError("PROVIDER_ERROR", `API error (${status}) — ${respText.slice(0, 200)}`);
-          }
-
-          console.log("\n=== STAGE 2: COMPLETE RAW GEMINI RESPONSE ===");
-          try {
-            console.log(JSON.stringify(JSON.parse(respText), null, 2));
-          } catch {
-            console.log(respText);
-          }
-
-          let parsedData: any;
-          try {
-            parsedData = JSON.parse(respText);
-          } catch {
-            throw new AIError("PROVIDER_ERROR", "Failed to parse Gemini response as JSON");
-          }
-
-          const text: string = parsedData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
-          console.log("\n=== STAGE 3: RESPONSE PARSING ===");
-          console.log(`assistant.content extracted from parsedData.candidates[0].content.parts[0].text: ${text}\n`);
 
           clearTimeout(timeout);
-          return text;
+          console.error(`[AI Tracing] Error | Model: ${currentModel} | Status: ${status} | Body: ${respText}`);
+
+          if (isModelUnavailableError(status, respText)) {
+            modelSwitchReason = `Model unavailable/deprecated (${status})`;
+            discovery.markExhausted(currentModel, modelSwitchReason);
+            shouldSwitchModel = true;
+            lastError = new AIError("MODEL_UNAVAILABLE", `Model ${currentModel} unavailable: ${status}`);
+            break;
+          }
+
+          if (status === 401 || status === 403) {
+            throw new AIError("AUTHENTICATION_FAILED", `Auth failed (${status})`);
+          }
+
+          if (status === 429) {
+            const isDailyLimit = respText.toLowerCase().includes("daily") || 
+                                 respText.toLowerCase().includes("quota") ||
+                                 respText.toLowerCase().includes("limit exceeded");
+            
+            if (isDailyLimit) {
+              modelSwitchReason = "Daily quota exceeded";
+              discovery.markExhausted(currentModel, modelSwitchReason);
+              shouldSwitchModel = true;
+              lastError = new AIError("RATE_LIMITED", `Daily quota exceeded for ${currentModel}`);
+              break; 
+            }
+
+            const retryAfter = res.headers.get("retry-after");
+            const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : aiConfig.retryDelayMs;
+            
+            lastError = new AIError("RATE_LIMITED", `Rate limit exceeded (429)`);
+            if (attempt < maxAttempts) {
+              await new Promise((resolve) => setTimeout(resolve, delay));
+              continue;
+            } else {
+              modelSwitchReason = "Rate limit retry exhausted";
+              discovery.markExhausted(currentModel, modelSwitchReason);
+              shouldSwitchModel = true;
+              break;
+            }
+          }
+
+          if ([500, 502, 503, 504].includes(status)) {
+            lastError = new AIError("PROVIDER_ERROR", `Transient server error (${status})`);
+            if (attempt < maxAttempts) {
+              await new Promise((resolve) => setTimeout(resolve, aiConfig.retryDelayMs));
+              continue;
+            } else {
+              modelSwitchReason = `Transient error retry exhausted (${status})`;
+              shouldSwitchModel = true;
+              break;
+            }
+          }
+
+          throw new AIError("PROVIDER_ERROR", `API error (${status}) — ${respText.slice(0, 200)}`);
+
         } catch (err: any) {
           clearTimeout(timeout);
           if (err instanceof AIError) {
@@ -216,27 +244,33 @@ Type: ${context.scanType}, Risk: ${context.riskScore}/100, Signals: ${context.si
           } else if (err.name === "AbortError") {
             lastError = new AIError("NETWORK_TIMEOUT", `Request timeout (${this.timeoutMs / 1000}s)`);
           } else {
-            lastError = new AIError("PROVIDER_ERROR", err);
+            lastError = new AIError("PROVIDER_ERROR", err.message || err);
           }
 
-          const isRetryable =
+          const isTransient =
             lastError.aiCode === "NETWORK_TIMEOUT" ||
-            lastError.aiCode === "RATE_LIMITED" ||
-            (lastError.aiCode === "PROVIDER_ERROR" && lastError.rawError && !String(lastError.rawError.message || lastError.rawError).includes("Bad request"));
+            lastError.aiCode === "PROVIDER_ERROR"; 
 
-          if (attempt < maxAttempts && isRetryable && !triggerFallback) {
+          if (attempt < maxAttempts && isTransient) {
             await new Promise((resolve) => setTimeout(resolve, aiConfig.retryDelayMs));
           } else {
+            modelSwitchReason = `Exception: ${lastError.message || lastError.aiCode}`;
+            shouldSwitchModel = true;
             break;
           }
         }
       }
 
-      if (!triggerFallback) {
-        throw lastError;
+      if (shouldSwitchModel) {
+        fallbackCount++;
+        console.warn(
+          `[AI Fallback] Switch Model | Provider: gemini | Preferred Model: ${aiConfig.preferredModel} | ` +
+          `Failed Model: ${currentModel} | Reason: ${modelSwitchReason} | Fallback Count: ${fallbackCount}`
+        );
+        continue;
       }
-    }
 
-    throw new AIError("MODEL_UNAVAILABLE", "All configured models failed.");
+      throw lastError;
+    }
   }
 }

@@ -14,7 +14,7 @@ const SCAM_KEYWORDS = [
  * Detailed UPI Threat Engine with Brand Impersonation, Scam Keywords,
  * Reputation Database, and Scammer Profile checks.
  */
-export async function analyzeUpiDetailed(upiId: string): Promise<AnalysisResult> {
+export async function analyzeUpiDetailed(upiId: string, metadata?: any): Promise<AnalysisResult> {
   const signals: Signal[] = [];
   let score = 0;
 
@@ -127,7 +127,8 @@ export async function analyzeUpiDetailed(upiId: string): Promise<AnalysisResult>
   }
 
   // 5. Internal Reputation Database Lookups
-  const reputation = await upiReputationRepository.getReputation(cleaned);
+  const isQrScan = !!(metadata?.isQrScan || metadata?.originalQr);
+  const reputation = isQrScan ? null : await upiReputationRepository.getReputation(cleaned);
   if (reputation) {
     score += Math.min(reputation.reportCount * 15, 40);
     signals.push({

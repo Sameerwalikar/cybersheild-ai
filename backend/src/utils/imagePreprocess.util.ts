@@ -17,6 +17,7 @@ export async function preprocessImage(buffer: Buffer): Promise<{ data: Uint8Clam
   }
 
   const { data, info } = await processed
+    .flatten({ background: "#ffffff" })
     .raw()
     .ensureAlpha()
     .toBuffer({ resolveWithObject: true });

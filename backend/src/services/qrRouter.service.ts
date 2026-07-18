@@ -62,7 +62,7 @@ export async function routeAndAnalyzeQr(userId: string, decodedContent: string) 
         userId,
         scanType: "UPI",
         content: upiId,
-        metadata: { upiFields: parsedFields, originalQr: decodedContent }
+        metadata: { upiFields: parsedFields, originalQr: decodedContent, isQrScan: true }
       });
 
       analysisId = scanRes.id;

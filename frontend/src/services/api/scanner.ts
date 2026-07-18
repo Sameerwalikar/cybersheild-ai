@@ -17,6 +17,15 @@ async function post<T>(endpoint: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
 
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      window.location.href = "/login?role=citizen";
+    }
+    throw new Error("Session expired. Please log in again.");
+  }
+
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || "Request failed");
   return json.data as T;
@@ -28,6 +37,15 @@ async function get<T>(endpoint: string): Promise<T> {
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     credentials: "include",
   });
+
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      window.location.href = "/login?role=citizen";
+    }
+    throw new Error("Session expired. Please log in again.");
+  }
 
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || "Request failed");
@@ -110,6 +128,8 @@ export interface ScanResult {
   verdict?: string;
   headline?: string;
   metadata?: any;
+  decodedContent?: string;
+  contentType?: string;
 }
 
 export interface HistoryItem {
@@ -143,7 +163,7 @@ export const scannerApi = {
   getHistory: () =>
     get<HistoryItem[]>("/analyze/history"),
 
-  async uploadQrImage(file: File): Promise<{ decodedContent: string }> {
+  async uploadQrImage(file: File, signal?: AbortSignal): Promise<ScanResult> {
     const token = getToken();
     const formData = new FormData();
     formData.append("qrImage", file);
@@ -155,11 +175,21 @@ export const scannerApi = {
       },
       credentials: "include",
       body: formData,
+      signal,
     });
+
+    if (res.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login?role=citizen";
+      }
+      throw new Error("Session expired. Please log in again.");
+    }
 
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || json.error || "Upload failed");
-    return json.data;
+    return json.data as ScanResult;
   },
 
   classifyQrContent(decodedContent: string) {
