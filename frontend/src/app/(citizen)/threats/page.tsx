@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { historyApi, type HistoryItemFull, type HistoryDetail, type HistoryTrends, type HistoryQuery } from "@/services/api/history";
@@ -20,6 +19,40 @@ export default function ThreatHistoryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<HistoryDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  
+  // Resizing state
+  const [drawerWidth, setDrawerWidth] = useState(450);
+  const isResizing = useRef(false);
+
+  const startResizing = useCallback(() => {
+    isResizing.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    isResizing.current = false;
+    document.body.style.cursor = "default";
+    document.body.style.userSelect = "";
+  }, []);
+
+  const resize = useCallback((e: MouseEvent) => {
+    if (isResizing.current) {
+      const newWidth = document.body.clientWidth - e.clientX;
+      if (newWidth > 320 && newWidth < document.body.clientWidth * 0.9) {
+        setDrawerWidth(newWidth);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [resize, stopResizing]);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -161,17 +194,27 @@ export default function ThreatHistoryPage() {
           <motion.div className="fixed inset-0 z-50 flex justify-end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="absolute inset-0 bg-black/50" onClick={() => { setSelectedId(null); setDetail(null); }} />
             <motion.div
-              className="relative w-full max-w-md bg-[#0D0D12] border-l border-[rgba(236,154,163,0.08)] h-full overflow-y-auto p-6"
+              className="relative bg-[#0D0D12] border-l border-[rgba(236,154,163,0.08)] h-full flex flex-col"
+              style={{ width: drawerWidth }}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.3, ease }}
             >
-              <button onClick={() => { setSelectedId(null); setDetail(null); }} className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-[#B6B8C4] hover:text-[#F8F8FA] hover:bg-[rgba(236,154,163,0.05)]">✕</button>
+              {/* Resizer Handle */}
+              <div 
+                className="absolute top-0 left-0 w-2 h-full cursor-col-resize hover:bg-[rgba(236,154,163,0.3)] active:bg-[#EC9AA3] z-10 transition-colors group"
+                onMouseDown={startResizing}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-0.5 bg-[#B6B8C4]/30 rounded-full group-hover:bg-[#12121A]"></div>
+              </div>
 
-              {detailLoading ? (
-                <div className="space-y-4 pt-8"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-24 w-full" /><Skeleton className="h-16 w-full" /></div>
-              ) : detail ? (
+              <div className="flex-1 overflow-y-auto p-6 w-full relative">
+                <button onClick={() => { setSelectedId(null); setDetail(null); }} className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-[#B6B8C4] hover:text-[#F8F8FA] hover:bg-[rgba(236,154,163,0.05)]">✕</button>
+
+                {detailLoading ? (
+                  <div className="space-y-4 pt-8"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-24 w-full" /><Skeleton className="h-16 w-full" /></div>
+                ) : detail ? (
                 <div className="space-y-5 pt-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -182,6 +225,16 @@ export default function ThreatHistoryPage() {
                     </div>
                     <p className="text-2xl font-bold text-[#F8F8FA] tabular-nums">{detail.riskScore}<span className="text-sm text-[#B6B8C4]">/100</span></p>
                   </div>
+
+                  {detail.metadata?.imageUrl && (
+                    <div className="rounded-xl overflow-hidden border border-[rgba(236,154,163,0.15)] bg-[#12121A]/60 flex items-center justify-center p-2">
+                      <img 
+                        src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:4000'}${detail.metadata.imageUrl}`} 
+                        alt="Uploaded Scan" 
+                        className="max-w-full max-h-[250px] object-contain rounded-lg"
+                      />
+                    </div>
+                  )}
 
                   <div className="rounded-xl bg-[#12121A]/60 border border-[rgba(236,154,163,0.06)] p-4">
                     <h3 className="text-[10px] font-bold text-[#B6B8C4] uppercase tracking-wider mb-2">Original Input</h3>
@@ -224,6 +277,7 @@ export default function ThreatHistoryPage() {
                   </p>
                 </div>
               ) : null}
+              </div>
             </motion.div>
           </motion.div>
         )}

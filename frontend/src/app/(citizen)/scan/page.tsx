@@ -10,7 +10,9 @@ const scanTypes = [
   { id: "website", title: "Scan Website", description: "Check URLs for malicious content, phishing pages, or unsafe redirects.", href: "/scan/website", icon: <GlobeIcon /> },
   { id: "qr", title: "Scan QR Code", description: "Decode and analyze QR codes for malicious URLs or payment fraud.", href: "/scan/qr", icon: <QrIcon /> },
   { id: "upi", title: "Scan UPI", description: "Verify UPI IDs against known fraud databases and pattern analysis.", href: "/scan/upi", icon: <UpiIcon /> },
+  { id: "breach", title: "Breach Check", description: "Check if your email has been exposed in a known data breach.", href: "/scan/breach-check", icon: <MailIcon /> },
   { id: "voice", title: "Voice Analysis", description: "Analyze recorded phone calls for social engineering and vishing patterns.", href: "/scan/voice", icon: <MicIcon /> },
+  { id: "social-media", title: "Social Media", description: "Detect fake officer accounts and impersonators using profile screenshots.", href: "/scan/social-media", icon: <UserIcon /> },
   { id: "report", title: "Report Scam", description: "Submit a scam or fraud report to authorities and community database.", href: "/scan/report", icon: <AlertIcon /> },
 ];
 
@@ -89,3 +91,5 @@ function QrIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill=
 function UpiIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>; }
 function MicIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>; }
 function AlertIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>; }
+function MailIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>; }
+function UserIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>; }

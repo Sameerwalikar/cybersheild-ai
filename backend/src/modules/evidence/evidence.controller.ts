@@ -8,12 +8,21 @@ export const evidenceController = {
   async upload(req: Request, res: Response, next: NextFunction) {
     try {
       const user = (req as AuthenticatedRequest).user!;
-      const { filename, mimeType, file } = req.body;
+      const { filename, mimeType, file, reportId } = req.body;
       if (!filename || !mimeType || !file) {
         sendError(res, "filename, mimeType, and file (base64) are required", 400, "VALIDATION_ERROR");
         return;
       }
-      const result = await evidenceService.upload({ userId: user.id, filename, mimeType, fileBase64: file });
+      // If reportId is provided, validate it belongs to this citizen
+      if (reportId) {
+        const { prisma } = await import("../../config/database.js");
+        const report = await prisma.threatReport.findFirst({ where: { id: reportId, userId: user.id } });
+        if (!report) {
+          sendError(res, "Report not found or does not belong to you", 404, "NOT_FOUND");
+          return;
+        }
+      }
+      const result = await evidenceService.upload({ userId: user.id, filename, mimeType, fileBase64: file, reportId: reportId || undefined });
       sendSuccess(res, result, result.cached ? 200 : 201);
     } catch (err) { next(err); }
   },

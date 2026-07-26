@@ -151,11 +151,12 @@ export const policeApi = {
   getAnalytics: () => get<any>("/police/analytics"),
 
   // Reports (case management)
-  getReports: (params?: { status?: string; priority?: string; page?: number }) => {
+  getReports: (params?: { status?: string; priority?: string; page?: number; limit?: number }) => {
     const qs = new URLSearchParams();
     if (params?.status) qs.set("status", params.status);
     if (params?.priority) qs.set("priority", params.priority);
     if (params?.page) qs.set("page", String(params.page));
+    if (params?.limit) qs.set("limit", String(params.limit));
     const q = qs.toString();
     return get<{ items: PoliceReportItem[]; pagination: any }>(`/reports/police/all${q ? `?${q}` : ""}`);
   },

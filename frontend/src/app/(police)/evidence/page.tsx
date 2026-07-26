@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+const BASE_URL = BASE.replace("/api/v1", "");
 function getToken() { if (typeof window === "undefined") return null; return localStorage.getItem("accessToken"); }
 async function api<T>(endpoint: string, opts?: RequestInit): Promise<T> {
   const token = getToken();
@@ -37,6 +38,24 @@ const RISK_ROW: Record<string, string> = {
   medium:   "bg-white/[0.012] border-[rgba(236,154,163,0.05)] hover:border-[rgba(236,154,163,0.14)]",
   safe:     "bg-white/[0.012] border-[rgba(236,154,163,0.04)] hover:border-[rgba(236,154,163,0.1)]",
   low:      "bg-white/[0.012] border-[rgba(236,154,163,0.04)] hover:border-[rgba(236,154,163,0.1)]",
+};
+
+const REPORT_STATUS_STYLE: Record<string, { dot: string; text: string; label: string }> = {
+  submitted:    { dot: "bg-blue-400",     text: "text-blue-400",     label: "Submitted" },
+  under_review: { dot: "bg-amber-400",    text: "text-amber-400",    label: "Under Review" },
+  investigating:{ dot: "bg-[#EC9AA3]",   text: "text-[#EC9AA3]",    label: "Investigating" },
+  action_taken: { dot: "bg-emerald-400",  text: "text-emerald-400",  label: "Action Taken" },
+  resolved:     { dot: "bg-emerald-300",  text: "text-emerald-300",  label: "Resolved" },
+  rejected:     { dot: "bg-red-400",      text: "text-red-400/70",   label: "Rejected" },
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  Phishing: "Phishing",
+  "Financial Fraud": "Financial Fraud",
+  "Identity Theft": "Identity Theft",
+  "Vishing (Voice Scam)": "Vishing",
+  "UPI Fraud": "UPI Fraud",
+  Other: "Other",
 };
 
 const STATUS_OPTIONS = ["pending_review","under_review","investigating","action_taken","resolved","rejected"];
@@ -73,6 +92,7 @@ export default function EvidencePage() {
 
   const openDetail = async (id: string) => {
     setDetailLoading(true);
+    setSelected(null);
     try { setSelected(await api<any>(`/evidence/police/${id}`)); } catch {}
     setDetailLoading(false);
   };
@@ -116,7 +136,7 @@ export default function EvidencePage() {
         <div>
           <h1 className="text-2xl font-black text-[#F8F8FA] tracking-tight">Evidence Intelligence</h1>
           <p className="mt-1 text-xs text-[#B6B8C4]/55 font-medium">
-            Citizen-submitted evidence awaiting analysis and review.
+            Citizen-submitted evidence — with linked complaints and submitter details at a glance.
           </p>
         </div>
       </motion.div>
@@ -161,7 +181,7 @@ export default function EvidencePage() {
       {loading ? (
         <div className="space-y-2 animate-pulse">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-[72px] rounded-xl bg-[rgba(236,154,163,0.03)]" />
+            <div key={i} className="h-[80px] rounded-xl bg-[rgba(236,154,163,0.03)]" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -174,39 +194,78 @@ export default function EvidencePage() {
         </div>
       ) : (
         <div className="space-y-1.5">
-          {items.map((e: any, i: number) => (
-            <motion.button key={e.id} onClick={() => openDetail(e.id)}
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: i * 0.025, ease }}
-              className={`w-full text-left px-4 py-3.5 rounded-xl border
-                transition-[border-color,background-color] duration-150
-                ${RISK_ROW[e.riskLevel] ?? RISK_ROW.low}`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-semibold text-[#F8F8FA] truncate">{e.filename}</span>
-                    <span className="text-[8px] text-[#B6B8C4]/50 capitalize px-1.5 py-0.5 rounded-md
-                      bg-[#12121A] border border-[rgba(236,154,163,0.06)] whitespace-nowrap">
-                      {e.status?.replace(/_/g, " ")}
+          {items.map((e: any, i: number) => {
+            const rStyle = e.reportStatus ? (REPORT_STATUS_STYLE[e.reportStatus] ?? REPORT_STATUS_STYLE.submitted) : null;
+            return (
+              <motion.button key={e.id} onClick={() => openDetail(e.id)}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: i * 0.025, ease }}
+                className={`w-full text-left px-4 py-3.5 rounded-xl border
+                  transition-[border-color,background-color] duration-150
+                  ${RISK_ROW[e.riskLevel] ?? RISK_ROW.low}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 space-y-1">
+
+                    {/* Row 1: filename + status badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[#F8F8FA] truncate">{e.filename}</span>
+                      <span className="text-[8px] text-[#B6B8C4]/50 capitalize px-1.5 py-0.5 rounded-md
+                        bg-[#12121A] border border-[rgba(236,154,163,0.06)] whitespace-nowrap">
+                        {e.status?.replace(/_/g, " ")}
+                      </span>
+                    </div>
+
+                    {/* Row 2: citizen name · mime · time */}
+                    <div className="flex items-center gap-2">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#B6B8C4]/35 flex-shrink-0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                      <span className="text-[9px] text-[#B6B8C4]/70 font-medium">{e.citizenName}</span>
+                      <span className="text-[9px] text-[#B6B8C4]/25">·</span>
+                      <span className="text-[9px] text-[#B6B8C4]/40 font-mono">{e.mimeType}</span>
+                      <span className="text-[9px] text-[#B6B8C4]/30 font-mono">{rel(e.createdAt)}</span>
+                    </div>
+
+                    {/* Row 3: linked complaint tag (if any) */}
+                    {e.reportNumber ? (
+                      <div className="flex items-center gap-1.5 pt-0.5">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#EC9AA3]/50 flex-shrink-0"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <span className="text-[9px] font-mono text-[#EC9AA3]/80">{e.reportNumber}</span>
+                        <span className="text-[9px] text-[#B6B8C4]/30">·</span>
+                        <span className="text-[9px] text-[#B6B8C4]/55">{CATEGORY_LABELS[e.reportType] ?? e.reportType}</span>
+                        {rStyle && (
+                          <>
+                            <span className="text-[9px] text-[#B6B8C4]/25">·</span>
+                            <span className={`flex items-center gap-0.5 text-[8px] font-semibold ${rStyle.text}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${rStyle.dot}`} />
+                              {rStyle.label}
+                            </span>
+                          </>
+                        )}
+                        {e.reportDescription && (
+                          <>
+                            <span className="text-[9px] text-[#B6B8C4]/20 mx-0.5">—</span>
+                            <span className="text-[9px] text-[#B6B8C4]/40 truncate max-w-[180px]">{e.reportDescription}</span>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 pt-0.5">
+                        <span className="text-[8px] text-[#B6B8C4]/25 italic">No complaint linked</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Risk score */}
+                  <div className="flex items-center gap-2.5 flex-shrink-0 pt-0.5">
+                    <span className={`w-2 h-2 rounded-full ${RISK_DOT[e.riskLevel] ?? "bg-[#B6B8C4]"}`} />
+                    <span className={`text-sm font-black tabular-nums ${RISK_TEXT[e.riskLevel] ?? "text-[#F8F8FA]"}`}>
+                      {e.riskScore}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-[#B6B8C4]/65">{e.citizenName}</span>
-                    <span className="text-[9px] text-[#B6B8C4]/30">·</span>
-                    <span className="text-[9px] text-[#B6B8C4]/45 font-mono">{e.mimeType}</span>
-                    <span className="text-[9px] text-[#B6B8C4]/35 font-mono">{rel(e.createdAt)}</span>
-                  </div>
                 </div>
-                <div className="flex items-center gap-2.5 flex-shrink-0">
-                  <span className={`w-2 h-2 rounded-full ${RISK_DOT[e.riskLevel] ?? "bg-[#B6B8C4]"}`} />
-                  <span className={`text-sm font-black tabular-nums ${RISK_TEXT[e.riskLevel] ?? "text-[#F8F8FA]"}`}>
-                    {e.riskScore}
-                  </span>
-                </div>
-              </div>
-            </motion.button>
-          ))}
+              </motion.button>
+            );
+          })}
         </div>
       )}
 
@@ -235,7 +294,7 @@ export default function EvidencePage() {
 
                 {detailLoading && (
                   <div className="space-y-3 animate-pulse">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                    {Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="h-10 rounded-xl bg-[rgba(236,154,163,0.04)]" />
                     ))}
                   </div>
@@ -257,6 +316,128 @@ export default function EvidencePage() {
                         </span>
                       </div>
                     </div>
+
+                    {/* Evidence File Preview */}
+                    <DS title="Submitted File">
+                      {selected.storagePath ? (
+                        <div className="rounded-xl overflow-hidden border border-[rgba(236,154,163,0.1)] bg-[#12121A]">
+                          {selected.mimeType.startsWith("image/") ? (
+                            <div className="relative group">
+                              <img 
+                                src={`${BASE_URL}${selected.storagePath}`} 
+                                alt={selected.filename} 
+                                className="w-full max-h-[300px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.02]"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <a 
+                                  href={`${BASE_URL}${selected.storagePath}`} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="px-4 py-2 bg-[#EC9AA3] text-[#050508] font-bold text-xs rounded-xl shadow-lg hover:bg-[#ffb0b9] transition-colors"
+                                >
+                                  Open in New Tab
+                                </a>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-6 flex flex-col items-center justify-center gap-3">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#EC9AA3]"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              <div className="text-center">
+                                <p className="text-[11px] text-[#B6B8C4] font-medium max-w-[200px] truncate">{selected.filename}</p>
+                                <p className="text-[9px] text-[#B6B8C4]/40 font-mono mt-0.5">{selected.mimeType}</p>
+                              </div>
+                              <a 
+                                href={`${BASE_URL}${selected.storagePath}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="px-4 py-2 bg-[rgba(236,154,163,0.1)] hover:bg-[rgba(236,154,163,0.15)] text-[#EC9AA3] font-bold text-xs rounded-xl border border-[rgba(236,154,163,0.2)] transition-all flex items-center gap-1.5"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                Open PDF Document
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[rgba(236,154,163,0.02)] border border-dashed border-[rgba(236,154,163,0.08)]">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#B6B8C4]/30 flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                          <p className="text-[10px] text-[#B6B8C4]/35 italic">File content not available for legacy upload</p>
+                        </div>
+                      )}
+                    </DS>
+
+                    {/* ── Linked Complaint ── */}
+                    {selected.reportNumber ? (
+                      <DS title="Linked Complaint">
+                        <div className="space-y-2">
+                          {/* Report number + type + status row */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-mono font-bold text-[#EC9AA3]">{selected.reportNumber}</span>
+                            <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-[rgba(236,154,163,0.06)] text-[#B6B8C4] border border-[rgba(236,154,163,0.1)]">
+                              {CATEGORY_LABELS[selected.reportType] ?? selected.reportType}
+                            </span>
+                            {selected.reportStatus && (() => {
+                              const rs = REPORT_STATUS_STYLE[selected.reportStatus] ?? REPORT_STATUS_STYLE.submitted;
+                              return (
+                                <span className={`flex items-center gap-1 text-[9px] font-semibold ${rs.text}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${rs.dot}`} />
+                                  {rs.label}
+                                </span>
+                              );
+                            })()}
+                            {selected.reportPriority && (
+                              <span className={`text-[9px] font-semibold capitalize px-1.5 py-0.5 rounded border ${
+                                selected.reportPriority === "critical" ? "text-red-400 border-red-500/20 bg-red-500/5" :
+                                selected.reportPriority === "high" ? "text-orange-400 border-orange-500/20 bg-orange-500/5" :
+                                "text-amber-400 border-amber-500/20 bg-amber-500/5"
+                              }`}>
+                                {selected.reportPriority} priority
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          {selected.reportDescription && (
+                            <p className="text-[11px] text-[#B6B8C4] leading-relaxed border-t border-[rgba(236,154,163,0.06)] pt-2">
+                              {selected.reportDescription}
+                            </p>
+                          )}
+
+                          {/* Scammer contact */}
+                          {selected.reportScammerContact && Object.keys(selected.reportScammerContact).some(k => selected.reportScammerContact[k]) && (
+                            <div className="border-t border-[rgba(236,154,163,0.06)] pt-2 space-y-1">
+                              <p className="text-[8px] text-[#B6B8C4]/40 uppercase tracking-wider font-bold">Scammer Contact</p>
+                              {selected.reportScammerContact.phone && <DR label="Phone" value={selected.reportScammerContact.phone} />}
+                              {selected.reportScammerContact.email && <DR label="Email" value={selected.reportScammerContact.email} />}
+                              {selected.reportScammerContact.upiId && <DR label="UPI ID" value={selected.reportScammerContact.upiId} />}
+                              {selected.reportScammerContact.website && <DR label="Website" value={selected.reportScammerContact.website} />}
+                            </div>
+                          )}
+
+                          {/* Financial loss */}
+                          {selected.reportFinancialLoss?.amount && (
+                            <div className="border-t border-[rgba(236,154,163,0.06)] pt-2">
+                              <DR
+                                label="Financial Loss"
+                                value={`₹${Number(selected.reportFinancialLoss.amount).toLocaleString("en-IN")}${selected.reportFinancialLoss.method ? ` via ${selected.reportFinancialLoss.method}` : ""}`}
+                              />
+                            </div>
+                          )}
+
+                          {/* Report date */}
+                          {selected.reportCreatedAt && (
+                            <div className="border-t border-[rgba(236,154,163,0.06)] pt-2">
+                              <DR label="Filed" value={new Date(selected.reportCreatedAt).toLocaleString("en-IN")} />
+                            </div>
+                          )}
+                        </div>
+                      </DS>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[rgba(236,154,163,0.02)] border border-dashed border-[rgba(236,154,163,0.08)]">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#B6B8C4]/30 flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <p className="text-[10px] text-[#B6B8C4]/35 italic">No complaint linked to this evidence</p>
+                      </div>
+                    )}
 
                     {/* AI Analysis */}
                     {selected.visionSummary && (

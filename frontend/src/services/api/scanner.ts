@@ -205,4 +205,7 @@ export const scannerApi = {
       { decodedContent }
     );
   },
+
+  checkBreach: (email: string) =>
+    post<any>("/breach-check", { email }),
 };

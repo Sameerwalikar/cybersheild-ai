@@ -27,6 +27,7 @@ export interface HistoryItemFull {
   signals: { label: string; severity: string; confidence: number; description: string }[];
   timestamp: string;
   status: string;
+  metadata?: any;
 }
 
 export interface HistoryDetail extends HistoryItemFull {

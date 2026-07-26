@@ -9,16 +9,18 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { AuthInput, AuthCard, AuthBranding, PasswordStrength } from "@/components/auth";
 
-const registerSchema = z.object({
-  name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z.string().min(1, "Password is required").min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-  terms: z.literal(true, { message: "You must accept the terms" }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
+    email: z.string().min(1, "Email is required").email("Invalid email address"),
+    password: z.string().min(1, "Password is required").min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    terms: z.literal(true, { message: "You must accept the terms" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -31,7 +33,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
 
@@ -62,12 +69,8 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-      <div className="hidden lg:block">
-        <AuthBranding />
-      </div>
-      <div className="lg:hidden flex justify-center">
-        <AuthBranding />
-      </div>
+      <div className="hidden lg:block"><AuthBranding /></div>
+      <div className="lg:hidden flex justify-center"><AuthBranding /></div>
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -75,27 +78,26 @@ export default function RegisterPage() {
         transition={{ duration: 0.5, delay: 0.15, ease }}
       >
         <AuthCard>
+          {/* Card header */}
           <div className="mb-8 space-y-4">
             <div className="flex items-center justify-between">
-              {/* Role badge */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[rgba(236,154,163,0.06)] border border-[rgba(236,154,163,0.12)]">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[rgba(236,154,163,0.08)] border border-[rgba(236,154,163,0.2)]">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#EC9AA3]" />
                 <span className="text-[10px] font-bold text-[#EC9AA3] uppercase tracking-wider">{role}</span>
               </div>
-              
-              {/* Pulsing Encrypted Badge */}
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-pink-500/20 bg-pink-500/5 text-[9px] font-extrabold uppercase tracking-widest text-[#EC9AA3] animate-pulse">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-pink-400/20 bg-pink-50 text-[9px] font-extrabold uppercase tracking-widest text-[#EC9AA3] animate-pulse">
                 <span className="w-1 h-1 rounded-full bg-[#EC9AA3]" />
-                Encrypted Session
+                Encrypted
               </span>
             </div>
-            
+
             <div className="space-y-1 pt-1">
-              <h2 className="text-2xl font-bold text-[#F8F8FA] tracking-tight">Create account</h2>
-              <p className="text-sm text-[#B6B8C4] font-medium opacity-90">Join CyberShield AI and protect your digital life.</p>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Create account</h2>
+              <p className="text-sm text-slate-500 font-medium">Join CyberShield AI and protect your digital life.</p>
             </div>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <AuthInput
               label="Full Name"
@@ -140,27 +142,36 @@ export default function RegisterPage() {
               {...register("confirmPassword")}
             />
 
+            {/* Terms */}
             <div className="space-y-1 py-1">
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="mt-0.5 w-3.5 h-3.5 rounded border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.05)] text-[#EC9AA3] focus:ring-[#EC9AA3] focus:ring-offset-0"
+                  className="mt-0.5 w-3.5 h-3.5 rounded border-slate-300 text-[#EC9AA3] focus:ring-[#EC9AA3] focus:ring-offset-0"
                   {...register("terms")}
                 />
-                <span className="text-xs text-[#B6B8C4] leading-relaxed">
+                <span className="text-xs text-slate-600 leading-relaxed font-medium">
                   I agree to the{" "}
-                  <a href="#" className="text-[#EC9AA3] hover:text-[#F3B3BA] transition-colors border-b border-transparent hover:border-[#EC9AA3]/40 pb-0.5">Terms of Service</a>
+                  <a href="#" className="text-[#EC9AA3] hover:text-[#e07882] font-semibold transition-colors">Terms of Service</a>
                   {" "}and{" "}
-                  <a href="#" className="text-[#EC9AA3] hover:text-[#F3B3BA] transition-colors border-b border-transparent hover:border-[#EC9AA3]/40 pb-0.5">Privacy Policy</a>.
+                  <a href="#" className="text-[#EC9AA3] hover:text-[#e07882] font-semibold transition-colors">Privacy Policy</a>.
                 </span>
               </label>
-              {errors.terms && <p className="text-xs text-red-400" role="alert">{errors.terms.message}</p>}
+              {errors.terms && (
+                <p className="text-xs text-red-500 font-medium" role="alert">{errors.terms.message}</p>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-sm text-[#050508] bg-gradient-to-r from-[#EC9AA3] to-[#F3B3BA] shadow-[0_4px_20px_rgba(236,154,163,0.25)] hover:shadow-[0_6px_24px_rgba(236,154,163,0.4)] hover:scale-[1.015] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl font-bold text-sm text-white
+                bg-gradient-to-r from-[#EC9AA3] to-[#F3B3BA]
+                shadow-[0_4px_20px_rgba(236,154,163,0.3)]
+                hover:shadow-[0_6px_24px_rgba(236,154,163,0.45)]
+                hover:scale-[1.015] hover:-translate-y-0.5
+                active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none
+                transition-all duration-300 flex items-center justify-center gap-2"
             >
               {loading && (
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -168,15 +179,20 @@ export default function RegisterPage() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               )}
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Creating account…" : "Create Account"}
             </button>
 
-            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+            {error && (
+              <p className="text-xs text-red-500 text-center font-medium" role="alert">{error}</p>
+            )}
           </form>
 
-          <p className="mt-6 text-center text-xs text-[#B6B8C4]">
+          <p className="mt-6 text-center text-xs text-slate-500">
             Already have an account?{" "}
-            <Link href={`/login?role=${role}`} className="text-[#EC9AA3] hover:text-[#F3B3BA] font-medium border-b border-transparent hover:border-[#EC9AA3]/40 pb-0.5 transition-all duration-200">
+            <Link
+              href={`/login?role=${role}`}
+              className="text-[#EC9AA3] hover:text-[#e07882] font-semibold transition-colors"
+            >
               Sign in
             </Link>
           </p>

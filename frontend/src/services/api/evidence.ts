@@ -30,11 +30,15 @@ export interface EvidenceItem {
   confidence: number;
   createdAt: string;
   cached?: boolean;
+  reportId?: string | null;
+  reportNumber?: string | null;
+  reportType?: string | null;
+  storagePath?: string | null;
 }
 
 export const evidenceApi = {
-  upload: (filename: string, mimeType: string, file: string) =>
-    request<EvidenceItem>("POST", "/evidence/upload", { filename, mimeType, file }),
+  upload: (filename: string, mimeType: string, file: string, reportId?: string) =>
+    request<EvidenceItem>("POST", "/evidence/upload", { filename, mimeType, file, ...(reportId ? { reportId } : {}) }),
   list: (page = 1) => request<{ items: EvidenceItem[]; pagination: any }>("GET", `/evidence?page=${page}`),
   getById: (id: string) => request<EvidenceItem>("GET", `/evidence/${id}`),
   remove: (id: string) => request<any>("DELETE", `/evidence/${id}`),

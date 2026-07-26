@@ -26,4 +26,6 @@ router.post("/qr/upload", upload.single("qrImage"), scannerController.uploadAndD
 router.post("/qr/classify", scannerController.classifyQr);
 router.post("/qr/analyze", scannerController.analyzeQrParsed);
 
+router.post("/social-media/upload", upload.single("image"), scannerController.analyzeSocialMedia);
+
 export const scannerRouter = router;
