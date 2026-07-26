@@ -322,4 +322,12 @@ export const analyticsService = {
       recentActivity: recentReports.map((r) => ({ type: r.type, priority: r.priority.toLowerCase(), timestamp: r.createdAt.toISOString() })),
     };
   },
+
+  async getThreatInfrastructure() {
+    const nodes = await prisma.suspiciousInfrastructure.findMany({
+      orderBy: { lastSeen: "desc" },
+      take: 100,
+    });
+    return nodes;
+  },
 };

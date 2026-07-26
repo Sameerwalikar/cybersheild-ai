@@ -67,6 +67,7 @@ export const historyService = {
       } : null,
       timestamp: scan.createdAt.toISOString(),
       status: scan.status.toLowerCase(),
+      metadata: scan.metadata,
     };
   },
 

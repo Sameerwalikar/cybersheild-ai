@@ -14,6 +14,7 @@ import { timelineRouter } from "../modules/timeline/index.js";
 import { reportRouter } from "../modules/reports/index.js";
 import { analyticsRouter } from "../modules/analytics/index.js";
 import { searchRouter } from "../modules/search/index.js";
+import { breachCheckRouter } from "../modules/breach-check/index.js";
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use("/timeline", timelineRouter);
 router.use("/reports", reportRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/search", searchRouter);
+router.use("/breach-check", breachCheckRouter);
 
 export const apiRouter = router;

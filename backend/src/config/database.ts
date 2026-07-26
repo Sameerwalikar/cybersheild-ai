@@ -10,6 +10,17 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
+/** Run queries one-at-a-time — required when DATABASE_URL uses a pooler with connection_limit=1. */
+export async function runDbSequential<T extends readonly unknown[]>(
+  tasks: [...{ [I in keyof T]: () => Promise<T[I]> }]
+): Promise<T> {
+  const results: unknown[] = [];
+  for (const task of tasks) {
+    results.push(await task());
+  }
+  return results as T;
+}
+
 export async function connectDatabase(): Promise<void> {
   try {
     // Do NOT call prisma.$connect() explicitly — Prisma connects lazily.

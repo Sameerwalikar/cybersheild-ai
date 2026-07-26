@@ -15,5 +15,6 @@ router.get("/scammers/:id", analyticsController.scammerProfile);
 router.get("/scammers/:id/timeline", analyticsController.scammerTimeline);
 router.get("/scammers/:id/similar", analyticsController.scammerSimilar);
 router.get("/threat-map", analyticsController.threatMap);
+router.get("/threat-infrastructure", analyticsController.threatInfrastructure);
 
 export const analyticsRouter = router;

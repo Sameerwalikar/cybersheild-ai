@@ -1,4 +1,4 @@
-import { prisma } from "../../config/database.js";
+import { prisma, runDbSequential } from "../../config/database.js";
 
 export const policeService = {
   async getDashboard() {
@@ -6,35 +6,35 @@ export const policeService = {
       totalInvestigations, activeInvestigations, totalNetworks, totalEvidence, recentScansCount, threatsByCity,
       recentInvestigations, recentAnalyses, recentReports, criticalNotifications, recentIncidents, topThreats, recentNetworks,
       reportStats, topScammers
-    ] = await Promise.all([
-      prisma.investigation.count(),
-      prisma.investigation.count({ where: { status: "ACTIVE" } }),
-      prisma.fraudNetwork.count(),
-      prisma.evidence.count(),
-      prisma.threatScan.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
-      prisma.investigation.groupBy({ by: ["city"], _count: { id: true }, where: { city: { not: null } } }),
+    ] = await runDbSequential([
+      () => prisma.investigation.count(),
+      () => prisma.investigation.count({ where: { status: "ACTIVE" } }),
+      () => prisma.fraudNetwork.count(),
+      () => prisma.evidence.count(),
+      () => prisma.threatScan.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
+      () => prisma.investigation.groupBy({ by: ["city"], _count: { id: true }, where: { city: { not: null } } }),
       // Recent investigations
-      prisma.investigation.findMany({ orderBy: { updatedAt: "desc" }, take: 10, include: { network: true } }),
+      () => prisma.investigation.findMany({ orderBy: { updatedAt: "desc" }, take: 10, include: { network: true } }),
       // Recent threat analyses (high risk)
-      prisma.threatAnalysis.findMany({ where: { riskLevel: { in: ["HIGH", "CRITICAL"] } }, orderBy: { createdAt: "desc" }, take: 10, include: { scan: true } }),
+      () => prisma.threatAnalysis.findMany({ where: { riskLevel: { in: ["HIGH", "CRITICAL"] } }, orderBy: { createdAt: "desc" }, take: 10, include: { scan: true } }),
       // Recent citizen reports (investigation queue)
-      prisma.threatReport.findMany({
+      () => prisma.threatReport.findMany({
         orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         take: 15,
         include: { user: { include: { profile: true } } },
       }),
       // Critical notifications
-      prisma.notification.findMany({ where: { severity: "CRITICAL", isRead: false }, orderBy: { createdAt: "desc" }, take: 5 }),
+      () => prisma.notification.findMany({ where: { severity: "CRITICAL", isRead: false }, orderBy: { createdAt: "desc" }, take: 5 }),
       // Recent incidents
-      prisma.incident.findMany({ orderBy: { updatedAt: "desc" }, take: 8 }),
+      () => prisma.incident.findMany({ orderBy: { updatedAt: "desc" }, take: 8 }),
       // Top scan types (threat categories)
-      prisma.threatScan.groupBy({ by: ["scanType"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
+      () => prisma.threatScan.groupBy({ by: ["scanType"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
       // Recent fraud networks
-      prisma.fraudNetwork.findMany({ orderBy: { updatedAt: "desc" }, take: 5 }),
+      () => prisma.fraudNetwork.findMany({ orderBy: { updatedAt: "desc" }, take: 5 }),
       // Report statistics
-      prisma.threatReport.groupBy({ by: ["status"], _count: { id: true } }),
+      () => prisma.threatReport.groupBy({ by: ["status"], _count: { id: true } }),
       // Top scammer profiles
-      prisma.scammerProfile.findMany({ orderBy: { occurrences: "desc" }, take: 5 }),
+      () => prisma.scammerProfile.findMany({ orderBy: { occurrences: "desc" }, take: 5 }),
     ]);
 
     const reportStatsMap: Record<string, number> = {};

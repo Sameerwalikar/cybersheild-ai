@@ -26,8 +26,8 @@ export default function IpMap({ lat, lon, city, country }: IpMapProps) {
         attributionControl: false,
       }).setView([lat, lon], 12);
 
-      // CartoDB Dark Matter tiles match the CyberShield color scheme perfectly
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      // Standard OpenStreetMap tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
       }).addTo(mapInstanceRef.current);
 

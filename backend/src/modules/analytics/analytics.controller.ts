@@ -69,4 +69,11 @@ export const analyticsController = {
       sendSuccess(res, data);
     } catch (err) { next(err); }
   },
+
+  async threatInfrastructure(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await analyticsService.getThreatInfrastructure();
+      sendSuccess(res, data);
+    } catch (err) { next(err); }
+  },
 };

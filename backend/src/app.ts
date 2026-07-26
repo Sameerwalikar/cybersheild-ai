@@ -7,11 +7,14 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { apiRouter } from "./routes/index.js";
 import { errorHandler, notFoundHandler } from "./middlewares/index.js";
+import path from "path";
 
 const app = express();
 
 // Security
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors({
   origin: env.CORS_ORIGIN,
   credentials: true,
@@ -25,16 +28,16 @@ app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 app.use(cookieParser());
 app.use(compression());
 
+// Static files
+app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
+
 // Logging
 if (env.NODE_ENV !== "test") {
   app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 }
-
 // API routes
 app.use("/api/v1", apiRouter);
-
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
-
 export { app };

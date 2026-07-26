@@ -348,6 +348,138 @@ export const scannerService = {
       intel: null,
     };
   },
+
+  async analyzeSocialMediaScan(input: {
+    userId: string;
+    imageBase64: string;
+    mimeType: string;
+    imageUrl?: string;
+  }) {
+    const startTime = Date.now();
+    
+    // Dynamic import to prevent circular deps or lazy load AI provider
+    const { getAIProvider } = await import("../ai/ai.provider.js");
+    const aiProvider = getAIProvider();
+
+    const prompt = `You are a Cybercrime Investigator specializing in Social Media Impersonation.
+Analyze this profile screenshot (WhatsApp, Instagram, LinkedIn, Facebook, etc.) for impersonation fraud. Look for:
+1. Fake police, military, or government uniforms (e.g. mismatched ranks, low quality patches, unusual backgrounds).
+2. Stolen profile pictures (watermarks, cropped artifacts, blurriness, stock photo appearance).
+3. Scam bio patterns (e.g. asking for money, 'customs officer', 'crypto expert', bad grammar, fake job titles).
+4. Follower/following ratio anomalies (if visible).
+5. Verification badge tampering or fake badges in the profile photo.
+
+Analyze the image carefully.
+
+Respond STRICTLY with a valid JSON object exactly in this format (no markdown, no extra text):
+{
+  "riskScore": <number 0-100>,
+  "confidence": <number 0.0-1.0>,
+  "category": "Social Media Impersonation",
+  "explanation": "<Detailed paragraph explaining the findings and red flags>",
+  "detectedSignals": ["<red flag 1>", "<red flag 2>"],
+  "recommendations": ["<advice 1>", "<advice 2>"],
+  "aiSummary": "<1 sentence summary>"
+}`;
+
+    let aiResult;
+    try {
+      const responseText = await aiProvider.analyzeImage(input.imageBase64, input.mimeType, prompt);
+      
+      // Clean up markdown code blocks if present
+      const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      aiResult = JSON.parse(jsonStr);
+      
+      // Basic validation
+      if (typeof aiResult.riskScore !== 'number') aiResult.riskScore = 50;
+      if (!Array.isArray(aiResult.detectedSignals)) aiResult.detectedSignals = ["Analysis complete"];
+      if (!Array.isArray(aiResult.recommendations)) aiResult.recommendations = [];
+      if (!aiResult.explanation) aiResult.explanation = "Analysis complete.";
+    } catch (e) {
+      console.error("AI Impersonation analysis failed:", e);
+      aiResult = {
+        riskScore:       50,
+        confidence:      0.5,
+        category:        "Social Media Impersonation",
+        explanation:     "AI vision analysis unavailable. Screenshot could not be fully analyzed.",
+        detectedSignals: ["Analysis pending"],
+        recommendations: ["Manually review the profile.", "Do not send money or sensitive information.", "Report if suspicious."],
+        aiSummary:       "Impersonation analysis incomplete — AI service unavailable.",
+      };
+    }
+
+    const processingTime = Date.now() - startTime;
+    const riskLevel =
+      aiResult.riskScore >= 80 ? "CRITICAL" :
+      aiResult.riskScore >= 60 ? "HIGH" :
+      aiResult.riskScore >= 40 ? "MEDIUM" :
+      aiResult.riskScore >= 20 ? "LOW" : "SAFE";
+
+    const scan = await scannerRepository.createScan({
+      userId:   input.userId,
+      scanType: "QR",
+      content:  `[SOCIAL_MEDIA_SCREENSHOT] Impersonation check`,
+      metadata: { isSocialMedia: true, mimeType: input.mimeType, imageUrl: input.imageUrl },
+    });
+
+    const analysis = await scannerRepository.createAnalysis({
+      scanId:         scan.id,
+      riskScore:      aiResult.riskScore,
+      riskLevel:      riskLevel as any,
+      summary:        aiResult.explanation,
+      recommendation: aiResult.recommendations.join(" "),
+      confidence:     aiResult.confidence,
+      processingTime,
+      signals:        aiResult.detectedSignals.map((s: string) => ({
+        label:       s,
+        severity:    aiResult.riskScore >= 60 ? "HIGH" : "MEDIUM",
+        confidence:  aiResult.confidence,
+        description: s,
+      })),
+    });
+
+    notificationService
+      .notifyScanComplete(input.userId, scan.id, riskLevel, aiResult.riskScore, "QR")
+      .catch(() => {});
+    graphService
+      .processScan(scan.id, aiResult.explanation + " " + aiResult.detectedSignals.join(" "), riskLevel)
+      .catch(() => {});
+    timelineService.publish({
+      type:            "THREAT_SCAN",
+      actorId:         input.userId,
+      title:           "Social Media Impersonation scan completed",
+      description:     `Risk: ${aiResult.riskScore}/100 (${riskLevel})`,
+      severity:        aiResult.riskScore >= 60 ? "critical" : aiResult.riskScore >= 30 ? "warning" : "info",
+      relatedAnalysis: analysis.id,
+    }).catch(() => {});
+
+    return {
+      id:              analysis.id,
+      scanId:          scan.id,
+      scanType:        "social-media",
+      riskScore:       aiResult.riskScore,
+      riskLevel:       riskLevel.toLowerCase(),
+      confidence:      aiResult.confidence,
+      summary:         aiResult.explanation,
+      recommendation:  aiResult.recommendations.join(" "),
+      signals:         aiResult.detectedSignals.map((s: string) => ({
+        label:       s,
+        severity:    aiResult.riskScore >= 60 ? "high" : "medium",
+        confidence:  aiResult.confidence,
+        description: s,
+      })),
+      processingTime,
+      timestamp:       scan.createdAt.toISOString(),
+      ai: {
+        explanation:     aiResult.explanation,
+        category:        aiResult.category,
+        citizenAdvice:   aiResult.aiSummary || aiResult.explanation,
+        recommendations: aiResult.recommendations,
+        aiSummary:       aiResult.aiSummary || "Analysis complete.",
+      },
+      intel: null,
+    };
+  },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

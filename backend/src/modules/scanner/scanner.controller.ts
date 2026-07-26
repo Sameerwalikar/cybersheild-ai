@@ -2,6 +2,9 @@ import type { Request, Response, NextFunction } from "express";
 import { scannerService } from "./scanner.service.js";
 import { sendSuccess } from "../../utils/response.js";
 import type { AuthenticatedRequest } from "../../types/index.js";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 export const scannerController = {
   async analyzeMessage(req: Request, res: Response, next: NextFunction) {
@@ -160,6 +163,45 @@ export const scannerController = {
       sendSuccess(res, report);
     } catch (err: any) {
       res.status(500).json({ success: false, stage: "analyze", error: "INTERNAL_ERROR", message: err.message || "Analysis failed." });
+    }
+  },
+
+  async analyzeSocialMedia(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "NO_FILE", message: "Please upload an image screenshot." });
+      }
+
+      const mimeType = req.file.mimetype;
+      if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(mimeType)) {
+        return res.status(400).json({ success: false, error: "UNSUPPORTED_FORMAT", message: "Only PNG, JPEG, JPG, and WEBP images are supported." });
+      }
+
+      // Convert buffer to base64 for Gemini Vision
+      const imageBase64 = req.file.buffer.toString('base64');
+      const user = (req as AuthenticatedRequest).user!;
+      
+      // Save image to disk for history display
+      const ext = mimeType.split('/')[1] || "png";
+      const filename = `${crypto.randomUUID()}.${ext}`;
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, req.file.buffer);
+      const imageUrl = `/uploads/${filename}`;
+
+      const result = await scannerService.analyzeSocialMediaScan({
+        userId: user.id,
+        imageBase64,
+        mimeType,
+        imageUrl,
+      });
+
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
     }
   },
 };

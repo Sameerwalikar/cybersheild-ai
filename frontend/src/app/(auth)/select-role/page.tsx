@@ -61,29 +61,33 @@ export default function SelectRolePage() {
   const handleContinue = async () => {
     if (!selected) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 400));
     router.push(`/login?role=${selected}`);
   };
 
   return (
     <div className="w-full max-w-5xl px-4 py-8">
       {/* Header */}
-      <motion.div className="text-center mb-16 space-y-4" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+      <motion.div
+        className="text-center mb-16 space-y-4"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease }}
+      >
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(236,154,163,0.06)] border border-[rgba(236,154,163,0.12)] text-[11px] text-[#EC9AA3] font-medium">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(236,154,163,0.12)] border border-[rgba(236,154,163,0.25)] text-[11px] text-[#EC9AA3] font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-[#EC9AA3] animate-pulse" />
             CyberShield AI — India&apos;s digital safety platform
           </div>
-          
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-pink-500/20 bg-pink-500/5 text-[9px] font-extrabold uppercase tracking-widest text-[#EC9AA3] animate-pulse">
             <span className="w-1 h-1 rounded-full bg-[#EC9AA3]" />
             Encrypted Session
           </span>
         </div>
-        
+
         <div className="space-y-2 pt-2">
-          <h1 className="text-4xl font-bold text-[#F8F8FA] tracking-tight">Choose your role</h1>
-          <p className="text-sm text-[#B6B8C4] font-medium opacity-90">Select how you&apos;ll access CyberShield AI.</p>
+          <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">Choose your role</h1>
+          <p className="text-sm text-white/70 font-medium">Select how you&apos;ll access CyberShield AI.</p>
         </div>
       </motion.div>
 
@@ -110,18 +114,20 @@ export default function SelectRolePage() {
                 onMouseLeave={() => setHovered(null)}
                 className={`
                   group relative w-full h-[24rem] rounded-[24px] text-left overflow-hidden
-                  border border-[rgba(255,255,255,0.08)] bg-[rgba(8,10,16,0.82)] backdrop-blur-[20px]
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC9AA3] focus-visible:ring-offset-2 focus-visible:ring-offset-black
+                  bg-white shadow-xl
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
                   transition-all duration-300
                   ${role.locked ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
                   ${isSelected
-                    ? "border-[rgba(236,154,163,0.4)] shadow-[0_0_40px_rgba(236,154,163,0.08)]"
-                    : "hover:scale-[1.015] hover:-translate-y-1 hover:border-[rgba(255,255,255,0.18)] hover:shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+                    ? "border-2 shadow-[0_0_0_2px_rgba(236,154,163,0.5),0_20px_60px_rgba(236,154,163,0.2)]"
+                    : "border border-slate-200 hover:scale-[1.015] hover:-translate-y-1 hover:shadow-2xl"
                   }
                 `}
-                style={{ focusRingColor: role.accentColor } as any}
+                style={{
+                  borderColor: isSelected ? role.accentColor : undefined,
+                }}
               >
-                {/* Canvas reveal on hover */}
+                {/* Canvas reveal on hover — lives behind a semi-transparent white overlay */}
                 <AnimatePresence>
                   {(isHovered || isSelected) && isActive && (
                     <motion.div
@@ -142,49 +148,65 @@ export default function SelectRolePage() {
                   )}
                 </AnimatePresence>
 
-                {/* Dark overlay so text stays readable */}
-                <div className="absolute inset-0 bg-[rgba(8,10,16,0.72)] backdrop-blur-[18px] z-[1] transition-all duration-300" />
+                {/* White overlay so text stays readable over canvas effect */}
+                <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px] z-[1] transition-all duration-300" />
 
                 {/* Content */}
                 <div className="relative z-[2] h-full flex flex-col p-6">
                   {/* Icon + selected check */}
                   <div className="flex items-start justify-between mb-6">
                     <div
-                      className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 relative"
+                      className="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300"
                       style={{
                         background: isSelected || isHovered
-                          ? `radial-gradient(circle, ${role.accentColor}25 0%, ${role.accentColor}05 70%)`
-                          : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${isSelected || isHovered ? role.accentColor + "40" : "rgba(255,255,255,0.06)"}`,
-                        boxShadow: isSelected || isHovered ? `0 0 20px ${role.accentColor}15` : "none"
+                          ? `radial-gradient(circle, ${role.accentColor}30 0%, ${role.accentColor}08 70%)`
+                          : "rgba(0,0,0,0.04)",
+                        border: `1.5px solid ${isSelected || isHovered ? role.accentColor + "60" : "rgba(0,0,0,0.08)"}`,
                       }}
                     >
-                      <RoleIcon id={role.id} color={isSelected || isHovered ? role.accentColor : "#B6B8C4"} size={26} />
+                      <RoleIcon
+                        id={role.id}
+                        color={isSelected || isHovered ? role.accentColor : "#64748b"}
+                        size={26}
+                      />
                     </div>
                     {isSelected && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: role.accentColor }}>
-                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#050508" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                        className="w-6 h-6 rounded-full flex items-center justify-center"
+                        style={{ background: role.accentColor }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </motion.div>
                     )}
                     {role.locked && (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(167,139,250,0.1)] text-[#a78bfa] border border-[rgba(167,139,250,0.2)]">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-violet-100 text-violet-600 border border-violet-200">
                         Coming soon
                       </span>
                     )}
                   </div>
 
-                  {/* Title + tagline — always visible */}
+                  {/* Title + tagline */}
                   <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-[#F8F8FA] transition-colors duration-200" style={{ color: isSelected || isHovered ? role.accentColor : "#F8F8FA" }}>
+                    <h3
+                      className="text-xl font-bold text-slate-900 transition-colors duration-200"
+                      style={{ color: isSelected || isHovered ? role.accentColor : undefined }}
+                    >
                       {role.title}
                     </h3>
-                    <p className="text-xs transition-colors duration-200" style={{ color: isSelected || isHovered ? `${role.accentColor}dd` : "#B6B8C4" }}>
+                    <p
+                      className="text-xs font-medium transition-colors duration-200"
+                      style={{ color: isSelected || isHovered ? role.accentColor + "cc" : "#64748b" }}
+                    >
                       {role.tagline}
                     </p>
                   </div>
 
-                  {/* Description — slides in on hover */}
+                  {/* Description on hover */}
                   <AnimatePresence>
                     {(isHovered || isSelected) ? (
                       <motion.p
@@ -193,7 +215,7 @@ export default function SelectRolePage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 4 }}
                         transition={{ duration: 0.25 }}
-                        className="mt-4 text-xs text-[#B6B8C4] leading-relaxed"
+                        className="mt-4 text-xs text-slate-600 leading-relaxed"
                       >
                         {role.description}
                       </motion.p>
@@ -202,17 +224,20 @@ export default function SelectRolePage() {
                     )}
                   </AnimatePresence>
 
-                  {/* Features — always at bottom */}
-                  <ul className="mt-auto space-y-2 pt-4 border-t border-[rgba(255,255,255,0.04)]">
+                  {/* Features */}
+                  <ul className="mt-auto space-y-2 pt-4 border-t border-slate-100">
                     {role.features.map((f, fi) => (
                       <motion.li
                         key={f}
                         initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: isHovered || isSelected ? 1 : 0.5, x: 0 }}
+                        animate={{ opacity: isHovered || isSelected ? 1 : 0.6, x: 0 }}
                         transition={{ duration: 0.2, delay: fi * 0.04 }}
-                        className="flex items-center gap-2 text-[10px] text-[#B6B8C4]"
+                        className="flex items-center gap-2 text-[10px] text-slate-600 font-medium"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: role.accentColor + "80" }} />
+                        <span
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ background: role.accentColor + "90" }}
+                        />
                         {f}
                       </motion.li>
                     ))}
@@ -225,25 +250,49 @@ export default function SelectRolePage() {
       </div>
 
       {/* Continue */}
-      <motion.div className="mt-12 flex flex-col items-center gap-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.5, ease }}>
+      <motion.div
+        className="mt-12 flex flex-col items-center gap-3"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.5, ease }}
+      >
         <button
           type="button"
           onClick={handleContinue}
           disabled={!selected || loading}
-          className="px-12 py-3.5 rounded-xl font-bold text-sm text-[#050508] bg-gradient-to-r from-[#EC9AA3] to-[#F3B3BA] shadow-[0_4px_20px_rgba(236,154,163,0.25)] hover:shadow-[0_6px_24px_rgba(236,154,163,0.4)] hover:scale-[1.015] hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-30 disabled:pointer-events-none transition-all duration-300 flex items-center gap-2"
+          className="px-12 py-3.5 rounded-xl font-bold text-sm text-white
+            bg-gradient-to-r from-[#EC9AA3] to-[#F3B3BA]
+            shadow-[0_4px_20px_rgba(236,154,163,0.35)]
+            hover:shadow-[0_6px_24px_rgba(236,154,163,0.5)]
+            hover:scale-[1.015] hover:-translate-y-0.5
+            active:scale-[0.97]
+            disabled:opacity-30 disabled:pointer-events-none
+            transition-all duration-300 flex items-center gap-2"
         >
-          {loading && <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>}
+          {loading && (
+            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          )}
           {loading ? "Setting up…" : "Continue"}
         </button>
-        {!selected && <p className="text-[10px] text-[#B6B8C4]/40">Select a role above to continue</p>}
+        {!selected && (
+          <p className="text-[11px] text-white/50 font-medium">Select a role above to continue</p>
+        )}
       </motion.div>
     </div>
   );
 }
 
 function RoleIcon({ id, color, size = 22 }: { id: string; color: string; size?: number }) {
-  const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (id === "citizen") return <svg {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
-  if (id === "police") return <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /></svg>;
+  const props = {
+    width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+    stroke: color, strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
+  };
+  if (id === "citizen")
+    return <svg {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
+  if (id === "police")
+    return <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /></svg>;
   return <svg {...props}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 3v4M8 3v4M2 11h20" /></svg>;
 }

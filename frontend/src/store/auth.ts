@@ -21,11 +21,31 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
+/** Read session synchronously from localStorage (client-only). */
+function readStoredSession(): Pick<AuthState, "user" | "accessToken" | "isAuthenticated" | "isLoading"> {
+  if (typeof window === "undefined") {
+    // SSR — no session available yet
+    return { user: null, accessToken: null, isAuthenticated: false, isLoading: false };
+  }
+  try {
+    const token   = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("user");
+    if (token && userStr) {
+      const user = JSON.parse(userStr) as User;
+      return { user, accessToken: token, isAuthenticated: true, isLoading: false };
+    }
+  } catch {
+    // corrupted storage — clear it
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+  }
+  return { user: null, accessToken: null, isAuthenticated: false, isLoading: false };
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  isAuthenticated: false,
-  isLoading: true,
+  // ── Eagerly restore session on store creation — eliminates the extra
+  // render cycle caused by calling restoreSession() in a useEffect. ──
+  ...readStoredSession(),
 
   login: (user, accessToken) => {
     if (typeof window !== "undefined") {
@@ -43,23 +63,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false });
   },
 
+  // Kept for backward compat — now a no-op since init is eager
   restoreSession: () => {
-    if (typeof window === "undefined") {
-      set({ isLoading: false });
-      return;
-    }
-    const token = localStorage.getItem("accessToken");
-    const userStr = localStorage.getItem("user");
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        set({ user, accessToken: token, isAuthenticated: true, isLoading: false });
-      } catch {
-        set({ isLoading: false });
-      }
-    } else {
-      set({ isLoading: false });
-    }
+    const session = readStoredSession();
+    set(session);
   },
 
   setLoading: (isLoading) => set({ isLoading }),

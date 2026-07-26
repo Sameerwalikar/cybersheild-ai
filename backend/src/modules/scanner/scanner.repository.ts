@@ -56,7 +56,7 @@ export const scannerRepository = {
     });
   },
 
-  async getUserScans(userId: string, limit = 20) {
+  async getUserScans(userId: string, limit = 500) {
     return prisma.threatScan.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },

@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { Shield, AlertTriangle, FileText, Activity, ShieldAlert } from "lucide-react";
+
+const InfrastructureMap = dynamic(() => import("../../../components/maps/InfrastructureMap"), { ssr: false });
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 function getToken() { if (typeof window === "undefined") return null; return localStorage.getItem("accessToken"); }
@@ -57,9 +61,7 @@ export default function ThreatMapPage() {
   const [data, setData] = useState<{ states: StateData[]; summary: any; recentActivity: any[] } | null>(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
-  const [selectedState, setSelected]  = useState<StateData | null>(null);
-  const [mode, setMode]               = useState<MapMode>("heatmap");
-  const [radarAngle, setRadarAngle]   = useState(0);
+  const [filter, setFilter]           = useState("all");
 
   useEffect(() => {
     api<any>("/analytics/threat-map")
@@ -67,8 +69,8 @@ export default function ThreatMapPage() {
   }, []);
 
   useEffect(() => {
-    const iv = setInterval(() => setRadarAngle(a => (a + 1.5) % 360), 50);
-    return () => clearInterval(iv);
+    api<any>("/analytics/threat-map")
+      .then(setData).catch(e => setError(e.message)).finally(() => setLoading(false));
   }, []);
 
   if (error) return (
@@ -103,40 +105,44 @@ export default function ThreatMapPage() {
       {data && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05, ease }}
-          className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+          className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: "Total Scans",     value: data.summary.totalScans,           color: "text-[#F8F8FA]" },
-            { label: "Reports",         value: data.summary.totalReports,         color: "text-[#F8F8FA]" },
-            { label: "Evidence",        value: data.summary.totalEvidence,        color: "text-[#F8F8FA]" },
-            { label: "Investigations",  value: data.summary.totalInvestigations,  color: "text-emerald-400" },
-            { label: "High Risk",       value: data.summary.highRiskScans,        color: "text-red-400" },
+            { label: "Total Scans",     value: data.summary.totalScans,           icon: <Activity size={18} />,     color: "text-[#F8F8FA]", bg: "from-white/5 to-transparent", borderColor: "border-white/10" },
+            { label: "Reports",         value: data.summary.totalReports,         icon: <FileText size={18} />,     color: "text-[#F8F8FA]", bg: "from-white/5 to-transparent", borderColor: "border-white/10" },
+            { label: "Evidence",        value: data.summary.totalEvidence,        icon: <Shield size={18} />,       color: "text-[#F8F8FA]", bg: "from-white/5 to-transparent", borderColor: "border-white/10" },
+            { label: "Investigations",  value: data.summary.totalInvestigations,  icon: <ShieldAlert size={18} />,  color: "text-emerald-400", bg: "from-emerald-500/5 to-transparent", borderColor: "border-emerald-500/20" },
+            { label: "High Risk",       value: data.summary.highRiskScans,        icon: <AlertTriangle size={18} />,color: "text-red-400", bg: "from-red-500/5 to-transparent", borderColor: "border-red-500/20" },
           ].map(s => (
             <div key={s.label}
-              className="px-4 py-4 rounded-2xl bg-[#0D0D14]/80 border border-[rgba(236,154,163,0.07)]
-                hover:border-[rgba(236,154,163,0.16)] transition-[border-color] duration-200 text-center">
-              <p className={`text-2xl font-black tabular-nums ${s.color}`}>
+              className={`relative px-4 py-5 rounded-2xl bg-gradient-to-b ${s.bg} border ${s.borderColor} 
+                backdrop-blur-xl overflow-hidden hover:-translate-y-1 transition-transform duration-300 group`}>
+              <div className={`absolute top-4 right-4 opacity-20 ${s.color} group-hover:opacity-40 transition-opacity`}>
+                {s.icon}
+              </div>
+              <p className={`text-3xl font-black tabular-nums tracking-tight ${s.color}`}>
                 {(s.value ?? 0).toLocaleString()}
               </p>
-              <p className="text-[8px] text-[#B6B8C4]/50 uppercase tracking-[0.1em] mt-2">{s.label}</p>
+              <p className="text-[10px] text-[#B6B8C4]/60 uppercase tracking-[0.15em] mt-2 font-bold flex items-center gap-1.5">
+                {s.label}
+              </p>
             </div>
           ))}
         </motion.div>
       )}
 
       {/* Mode switcher */}
-      <div className="flex gap-1.5 overflow-x-auto pb-0.5">
-        {(["heatmap","markers","investigations","evidence"] as MapMode[]).map(m => (
-          <button key={m} onClick={() => setMode(m)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap
-              transition-all duration-150
-              ${mode === m
-                ? "bg-[rgba(236,154,163,0.1)] text-[#EC9AA3] border border-[rgba(236,154,163,0.2)]"
-                : "text-[#B6B8C4]/60 hover:text-[#F8F8FA] border border-transparent hover:border-[rgba(236,154,163,0.08)]"
+      <div className="flex gap-2 overflow-x-auto pb-0.5">
+        {(["all", "high", "critical"]).map(m => (
+          <button key={m} onClick={() => setFilter(m)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap
+              transition-all duration-200 uppercase tracking-wider
+              ${filter === m
+                ? "bg-[rgba(236,154,163,0.15)] text-[#EC9AA3] border border-[rgba(236,154,163,0.3)] shadow-[0_0_15px_rgba(236,154,163,0.1)]"
+                : "text-[#B6B8C4]/50 hover:text-[#F8F8FA] bg-white/5 border border-transparent hover:border-white/10 hover:bg-white/10"
               }`}>
-            {m === "heatmap" ? "Threat Heatmap"
-              : m === "markers" ? "Incident Markers"
-              : m === "investigations" ? "Investigation Density"
-              : "Evidence Density"}
+            {m === "all" ? "All Infrastructure"
+              : m === "high" ? "High & Critical Risk"
+              : "Critical Threats Only"}
           </button>
         ))}
       </div>
@@ -145,141 +151,31 @@ export default function ThreatMapPage() {
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1, ease }}
-        className="relative rounded-2xl bg-[#060610] border border-[rgba(236,154,163,0.07)] overflow-hidden"
+        className="relative rounded-2xl bg-[#060610] border border-[rgba(236,154,163,0.15)] overflow-hidden shadow-2xl shadow-[rgba(236,154,163,0.05)]"
         style={{ height: 560 }}
       >
-        {/* India SVG */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <img src="/india.svg" alt="" className="h-[95%] w-auto"
-            style={{ filter: "drop-shadow(0 0 20px rgba(236,154,163,0.04)) opacity(0.9)" }} />
-        </div>
+        <InfrastructureMap filter={filter} />
 
-        {/* Grid overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-          style={{
-            backgroundImage: "linear-gradient(rgba(236,154,163,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(236,154,163,0.5) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }} />
-
-        {/* Radar sweep */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[460px] h-[460px] rounded-full relative overflow-hidden opacity-30">
-            <div className="absolute inset-0 rounded-full"
-              style={{
-                background: `conic-gradient(from ${radarAngle}deg, transparent 0deg, rgba(236,154,163,0.1) 20deg, transparent 40deg)`,
-              }} />
-          </div>
-        </div>
-
-        {/* State markers */}
-        {data?.states.map(state => {
-          const pos = STATE_POSITIONS[state.state];
-          if (!pos) return null;
-          const color = THREAT_COLOR[state.threatLevel] ?? THREAT_COLOR.low;
-          const baseSize = mode === "investigations"
-            ? Math.max(6, Math.min(20, state.investigations * 6))
-            : Math.max(6, Math.min(22, state.threats * 3));
-
-          return (
-            <button key={state.state} onClick={() => setSelected(s => s?.state === state.state ? null : state)}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-10"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-              aria-label={`${state.state}: ${state.threats} threats`}
-            >
-              {/* Pulse ring */}
-              {state.threats > 0 && (
-                <span className="absolute rounded-full animate-ping"
-                  style={{
-                    width: baseSize + 10, height: baseSize + 10,
-                    left: -(baseSize + 10) / 2 + baseSize / 2,
-                    top: -(baseSize + 10) / 2 + baseSize / 2,
-                    backgroundColor: `${color}25`,
-                  }} />
-              )}
-              {/* Marker */}
-              <span className="block rounded-full border-2 transition-transform duration-200 group-hover:scale-[1.9]"
-                style={{
-                  width: baseSize, height: baseSize,
-                  backgroundColor: `${color}45`,
-                  borderColor: color,
-                  boxShadow: `0 0 ${baseSize + 4}px ${color}55`,
-                }} />
-              {/* Tooltip */}
-              <span className="absolute left-1/2 -translate-x-1/2 -top-9 hidden group-hover:block
-                whitespace-nowrap px-2.5 py-1 rounded-lg bg-[#0D0D14] text-[9px] text-[#F8F8FA]
-                border border-[rgba(236,154,163,0.15)] shadow-xl z-20 pointer-events-none">
-                <span className="font-semibold">{state.state}</span>
-                <span className="text-[#B6B8C4]/60"> — {state.threats} threats</span>
-              </span>
-            </button>
-          );
-        })}
-
-        {/* Legend */}
-        <div className="absolute bottom-4 left-4 flex items-center gap-3 px-3 py-2 rounded-xl
-          bg-[#0D0D14]/90 border border-[rgba(236,154,163,0.08)] backdrop-blur-md">
-          {Object.entries(THREAT_COLOR).map(([level, color]) => (
-            <div key={level} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-[8px] text-[#B6B8C4]/70 capitalize">{level}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Live indicator */}
-        <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-xl
-          bg-[#0D0D14]/90 border border-[rgba(236,154,163,0.08)] backdrop-blur-md">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-50" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+        {/* Live indicator overlay */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl
+          bg-[#0D0D14]/90 border border-emerald-500/20 backdrop-blur-md z-[1000] shadow-[0_0_15px_rgba(52,211,153,0.1)]">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
           </span>
-          <span className="text-[9px] text-[#B6B8C4]/70 font-medium">Live</span>
+          <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Live Feed</span>
         </div>
 
         {/* Mode label */}
-        <div className="absolute top-4 left-4 px-2.5 py-1 rounded-lg
-          bg-[#0D0D14]/80 border border-[rgba(236,154,163,0.06)] backdrop-blur-md">
-          <span className="text-[9px] text-[#EC9AA3]/70 font-semibold uppercase tracking-wider">
-            {mode.replace(/_/g, " ")}
+        <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl
+          bg-[#0D0D14]/80 border border-[rgba(236,154,163,0.1)] backdrop-blur-md z-[1000]">
+          <span className="text-[10px] text-[#EC9AA3]/90 font-bold uppercase tracking-wider">
+            {filter === "all" ? "GLOBAL INFRASTRUCTURE" : filter === "high" ? "HIGH RISK INFRASTRUCTURE" : "CRITICAL THREATS"}
           </span>
         </div>
       </motion.div>
 
-      {/* State detail panel */}
-      {selectedState && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease }}
-          className="rounded-2xl bg-[#0D0D14]/85 border border-[rgba(236,154,163,0.08)] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <span className={`w-3 h-3 rounded-full ${THREAT_BG[selectedState.threatLevel]}`} />
-              <h3 className="text-sm font-bold text-[#F8F8FA]">{selectedState.state}</h3>
-              <span className={`text-[9px] font-bold uppercase tracking-wider ${THREAT_TEXT[selectedState.threatLevel]}`}>
-                {selectedState.threatLevel} threat
-              </span>
-            </div>
-            <button onClick={() => setSelected(null)}
-              className="w-7 h-7 rounded-lg flex items-center justify-center
-                text-[#B6B8C4]/50 hover:text-[#F8F8FA] hover:bg-[rgba(236,154,163,0.07)]
-                transition-colors text-sm">
-              ×
-            </button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: "Total Threats",   value: selectedState.threats,       color: "text-[#F8F8FA]" },
-              { label: "Reports",         value: selectedState.reports,       color: "text-[#EC9AA3]" },
-              { label: "Critical",        value: selectedState.critical,      color: "text-red-400" },
-              { label: "Investigations",  value: selectedState.investigations, color: "text-amber-400" },
-            ].map(s => (
-              <div key={s.label}>
-                <p className={`text-xl font-black tabular-nums ${s.color}`}>{s.value}</p>
-                <p className="text-[9px] text-[#B6B8C4]/50 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+
 
       {/* Recent activity */}
       {data && data.recentActivity.length > 0 && (
